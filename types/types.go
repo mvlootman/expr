@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/shopspring/decimal"
 	"reflect"
 	"strings"
 
@@ -28,6 +29,7 @@ var (
 	Uint64  = TypeOf(uint64(0))
 	Float   = TypeOf(float32(0))
 	Float64 = TypeOf(float64(0))
+	Decimal = TypeOf(decimal.NullDecimal{})
 	String  = TypeOf("")
 	Bool    = TypeOf(true)
 	Nil     = nilType{}

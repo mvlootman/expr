@@ -108,6 +108,14 @@ func AsFloat64() Option {
 	}
 }
 
+// AsDecimal tells the compiler to expect a float64 result.
+func AsDecimal() Option {
+	return func(c *conf.Config) {
+		c.Expect = reflect.Struct
+		c.ExpectAny = true
+	}
+}
+
 // WarnOnAny tells the compiler to warn if expression return any type.
 func WarnOnAny() Option {
 	return func(c *conf.Config) {
@@ -179,9 +187,11 @@ func EnableBuiltin(name string) Option {
 
 // WithContext passes context to all functions calls with a context.Context argument.
 func WithContext(name string) Option {
-	return Patch(patcher.WithContext{
-		Name: name,
-	})
+	return Patch(
+		patcher.WithContext{
+			Name: name,
+		},
+	)
 }
 
 // Timezone sets default timezone for date() and now() builtin functions.
@@ -190,9 +200,11 @@ func Timezone(name string) Option {
 	if err != nil {
 		panic(err)
 	}
-	return Patch(patcher.WithTimezone{
-		Location: tz,
-	})
+	return Patch(
+		patcher.WithTimezone{
+			Location: tz,
+		},
+	)
 }
 
 // Compile parses and compiles given input expression to bytecode program.

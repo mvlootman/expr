@@ -2,6 +2,7 @@ package mock
 
 import (
 	"fmt"
+	"github.com/shopspring/decimal"
 	"reflect"
 	"strings"
 	"time"
@@ -15,6 +16,7 @@ type Env struct {
 	Any                any
 	Bool               bool
 	Float              float64
+	Decimal            decimal.Decimal
 	Int64              int64
 	Int32              int32
 	Int, One, Two      int
@@ -25,6 +27,7 @@ type Env struct {
 	String             string
 	BoolPtr            *bool
 	FloatPtr           *float64
+	DecimalPtr         *decimal.Decimal
 	IntPtr             *int
 	IntPtrPtr          **int
 	StringPtr          *string
@@ -206,12 +209,14 @@ func (*StringerPatcher) Visit(node *ast.Node) {
 		return
 	}
 	if t.Implements(stringer) {
-		ast.Patch(node, &ast.CallNode{
-			Callee: &ast.MemberNode{
-				Node:     *node,
-				Property: &ast.StringNode{Value: "String"},
+		ast.Patch(
+			node, &ast.CallNode{
+				Callee: &ast.MemberNode{
+					Node:     *node,
+					Property: &ast.StringNode{Value: "String"},
+				},
 			},
-		})
+		)
 	}
 }
 

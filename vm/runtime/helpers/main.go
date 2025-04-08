@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"go/format"
 	"os"
@@ -13,14 +14,20 @@ func main() {
 	var b bytes.Buffer
 	err := template.Must(
 		template.New("helpers").
-			Funcs(template.FuncMap{
-				"cases":          func(op string) string { return cases(op, uints, ints, floats) },
-				"cases_int_only": func(op string) string { return cases(op, uints, ints) },
-				"cases_with_duration": func(op string) string {
-					return cases(op, uints, ints, floats, []string{"time.Duration"})
+			Funcs(
+				template.FuncMap{
+					"cases":          func(op string) string { return cases(op, uints, ints, floats, decimal) },
+					"cases_int_only": func(op string) string { return cases(op, uints, ints, decimal) },
+					"cases_with_duration": func(op string) string {
+						return cases(op, uints, ints, floats, decimal, []string{"time.Duration"})
+					},
+					"array_equal_cases": func() string {
+						return arrayEqualCases(
+							[]string{"string"}, uints, ints, floats, decimal,
+						)
+					},
 				},
-				"array_equal_cases": func() string { return arrayEqualCases([]string{"string"}, uints, ints, floats) },
-			}).
+			).
 			Parse(helpers),
 	).Execute(&b, nil)
 	if err != nil {
@@ -29,6 +36,8 @@ func main() {
 
 	formatted, err := format.Source(b.Bytes())
 	if err != nil {
+		// debugging
+		fmt.Print(string(b.Bytes()))
 		panic(err)
 	}
 	fmt.Print(string(formatted))
@@ -55,6 +64,23 @@ var floats = []string{
 	"float64",
 }
 
+var decimal = []string{
+	"decimal.Decimal",
+}
+
+var decOps = map[string]string{
+	"==": "Equal",
+	"<":  "LessThan",
+	">":  "GreaterThan",
+	"<=": "LessThanOrEqual",
+	">=": "GreaterThanOrEqual",
+	"+":  "Add",
+	"-":  "Sub",
+	"/":  "Div",
+	"*":  "Mul",
+	"%":  "Mod",
+}
+
 func cases(op string, xs ...[]string) string {
 	var types []string
 	for _, x := range xs {
@@ -78,16 +104,119 @@ func cases(op string, xs ...[]string) string {
 			if isFloat(a) || isFloat(b) {
 				t = "float64"
 			}
+			isDecimalA, isDecimalB := isDecimal(a), isDecimal(b)
+
 			echo(`case %v:`, b)
-			if op == "/" {
-				echo(`return float64(x) / float64(y)`)
+			decOp, ok := decOps[op]
+			if !ok {
+				panic(fmt.Sprintf("key:%s not found in decimal operators map", op))
+			}
+			// We need to generate different case statements depending on whether:
+			// both types are Decimal, the first type is Decimal, or the second type is Decimal
+			if isDecimalA && isDecimalB {
+				// both decimals we can perform decOp without conversion
+				statement := fmt.Sprintf(`x.%s(y)`, decOp)
+				if decOp == "Mod" {
+					statement = convertDecimalToInt(statement)
+				}
+				echo("return " + statement)
+			} else if isDecimalA {
+				// x : Decimal, y : non-Decimal
+				echo(caseDecimalDecAndNonDec(b, decOp, echo))
+			} else if isDecimalB {
+				// a : non-Decimal, b : Decimal
+				echo(caseDecimalNonDecAndDec(a, decOp, echo))
 			} else {
-				echo(`return %v(x) %v %v(y)`, t, op, t)
+				// handle non-decimals
+				if op == "/" {
+					echo(`return float64(x) / float64(y)`)
+				} else {
+					echo(`return %v(x) %v %v(y)`, t, op, t)
+				}
 			}
 		}
 		echo(`}`)
 	}
 	return strings.TrimRight(out, "\n")
+}
+
+func convertDecimalToInt(statement string) string {
+	return fmt.Sprintf("int(%s.IntPart())", statement)
+}
+
+func caseDecimalDecAndNonDec(b string, decOp string, echo func(s string, xs ...any)) string {
+	// a: Decimal, b : non-Decimal
+	// echo(`// debug caseDecimalDecAndNonDec: b:%s decOp:%s`, b, decOp)
+
+	var statement string
+	switch b {
+	case "uint", "uint8", "uint16", "uint32":
+		statement = fmt.Sprintf(`x.%s(decimal.NewFromUint64(uint64(y)))`, decOp)
+	case "uint64":
+		statement = fmt.Sprintf(`x.%s(decimal.NewFromUint64(y))`, decOp)
+	case "int8", "int16":
+		statement = fmt.Sprintf(`x.%s(decimal.NewFromInt32(int32(y)))`, decOp)
+	case "int32":
+		statement = fmt.Sprintf(`x.%s(decimal.NewFromInt32(y))`, decOp)
+	case "int":
+		statement = fmt.Sprintf(`x.%s(decimal.NewFromInt(int64(y)))`, decOp)
+	case "int64":
+		statement = fmt.Sprintf(`x.%s(decimal.NewFromInt(y))`, decOp)
+	case "float32":
+		statement = fmt.Sprintf(`x.%s(decimal.NewFromFloat32(y))`, decOp)
+	case "float64":
+		statement = fmt.Sprintf(`x.%s(decimal.NewFromFloat(y))`, decOp)
+	case "time.Duration":
+		statement = fmt.Sprintf(`x.%s(decimal.NewFromInt(int64(y)))`, decOp)
+	default:
+		fmt.Printf("decOp:%s type:%v\n", decOp, b)
+		panic(errors.New("missing decimal datatype/operator"))
+	}
+
+	if decOp == "Mod" {
+		statement = convertDecimalToInt(statement)
+	}
+
+	return "return " + statement
+}
+
+func caseDecimalNonDecAndDec(a string, decOp string, echo func(s string, xs ...any)) string {
+	// a: non-Decimal, b : Decimal
+	// echo(`// debug caseDecimalNonDecAndDec: a:%s decOp:%s`, a, decOp)
+
+	var statement string
+
+	switch a {
+	case "uint", "uint8", "uint16", "uint32":
+		statement = fmt.Sprintf(`decimal.NewFromUint64(uint64(x)).%s(y)`, decOp)
+	case "uint64":
+		statement = fmt.Sprintf(`decimal.NewFromUint64(x).%s(y)`, decOp)
+	case "int8", "int16":
+		statement = fmt.Sprintf(`decimal.NewFromInt32(int32(x)).%s(y)`, decOp)
+	case "int32":
+		statement = fmt.Sprintf(`decimal.NewFromInt32(x).%s(y)`, decOp)
+	case "int":
+		statement = fmt.Sprintf(`decimal.NewFromInt(int64(x)).%s(y)`, decOp)
+	case "int64":
+		statement = fmt.Sprintf(`decimal.NewFromInt(x).%s(y)`, decOp)
+	case "float32":
+		statement = fmt.Sprintf(`decimal.NewFromFloat32(x).%s(y)`, decOp)
+	case "float64":
+		statement = fmt.Sprintf(`decimal.NewFromFloat(x).%s(y)`, decOp)
+	case "decimal.Decimal":
+		statement = fmt.Sprintf(`decimal.NewFromFloat(x).%s(y)`, decOp)
+	case "time.Duration":
+		statement = fmt.Sprintf(`decimal.NewFromInt(int64(x)).%s(y)`, decOp)
+	default:
+		fmt.Printf("decOp:%s type:%v\n", decOp, a)
+		panic(errors.New("missing decimal datatype/operator"))
+	}
+
+	if decOp == "Mod" {
+		statement = convertDecimalToInt(statement)
+	}
+
+	return "return " + statement
 }
 
 func arrayEqualCases(xs ...[]string) string {
@@ -137,6 +266,10 @@ func isDuration(t string) bool {
 	return t == "time.Duration"
 }
 
+func isDecimal(t string) bool {
+	return t == "decimal.Decimal"
+}
+
 const helpers = `// Code generated by vm/runtime/helpers/main.go. DO NOT EDIT.
 
 package runtime
@@ -145,6 +278,8 @@ import (
 	"fmt"
 	"reflect"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 func Equal(a, b interface{}) bool {
@@ -316,7 +451,7 @@ func Multiply(a, b interface{}) interface{} {
 	panic(fmt.Sprintf("invalid operation: %T * %T", a, b))
 }
 
-func Divide(a, b interface{}) float64 {
+func Divide(a, b interface{}) interface{} {
 	switch x := a.(type) {
 	{{ cases "/" }}
 	}

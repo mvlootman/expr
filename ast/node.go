@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"github.com/shopspring/decimal"
 	"reflect"
 
 	"github.com/expr-lang/expr/checker/nature"
@@ -90,6 +91,11 @@ type IntegerNode struct {
 type FloatNode struct {
 	base
 	Value float64 // Value of the float.
+}
+
+type DecimalNode struct {
+	base
+	Value decimal.Decimal // Value of the decimal
 }
 
 // BoolNode represents a boolean.
