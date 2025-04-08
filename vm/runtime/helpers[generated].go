@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 func Equal(a, b interface{}) bool {
@@ -36,6 +38,8 @@ func Equal(a, b interface{}) bool {
 			return float64(x) == float64(y)
 		case float64:
 			return float64(x) == float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Equal(y)
 		}
 	case uint8:
 		switch y := b.(type) {
@@ -63,6 +67,8 @@ func Equal(a, b interface{}) bool {
 			return float64(x) == float64(y)
 		case float64:
 			return float64(x) == float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Equal(y)
 		}
 	case uint16:
 		switch y := b.(type) {
@@ -90,6 +96,8 @@ func Equal(a, b interface{}) bool {
 			return float64(x) == float64(y)
 		case float64:
 			return float64(x) == float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Equal(y)
 		}
 	case uint32:
 		switch y := b.(type) {
@@ -117,6 +125,8 @@ func Equal(a, b interface{}) bool {
 			return float64(x) == float64(y)
 		case float64:
 			return float64(x) == float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Equal(y)
 		}
 	case uint64:
 		switch y := b.(type) {
@@ -144,6 +154,8 @@ func Equal(a, b interface{}) bool {
 			return float64(x) == float64(y)
 		case float64:
 			return float64(x) == float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(x).Equal(y)
 		}
 	case int:
 		switch y := b.(type) {
@@ -171,6 +183,8 @@ func Equal(a, b interface{}) bool {
 			return float64(x) == float64(y)
 		case float64:
 			return float64(x) == float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(int64(x)).Equal(y)
 		}
 	case int8:
 		switch y := b.(type) {
@@ -198,6 +212,8 @@ func Equal(a, b interface{}) bool {
 			return float64(x) == float64(y)
 		case float64:
 			return float64(x) == float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).Equal(y)
 		}
 	case int16:
 		switch y := b.(type) {
@@ -225,6 +241,8 @@ func Equal(a, b interface{}) bool {
 			return float64(x) == float64(y)
 		case float64:
 			return float64(x) == float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).Equal(y)
 		}
 	case int32:
 		switch y := b.(type) {
@@ -252,6 +270,8 @@ func Equal(a, b interface{}) bool {
 			return float64(x) == float64(y)
 		case float64:
 			return float64(x) == float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(x).Equal(y)
 		}
 	case int64:
 		switch y := b.(type) {
@@ -279,6 +299,8 @@ func Equal(a, b interface{}) bool {
 			return float64(x) == float64(y)
 		case float64:
 			return float64(x) == float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(x).Equal(y)
 		}
 	case float32:
 		switch y := b.(type) {
@@ -306,6 +328,8 @@ func Equal(a, b interface{}) bool {
 			return float64(x) == float64(y)
 		case float64:
 			return float64(x) == float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat32(x).Equal(y)
 		}
 	case float64:
 		switch y := b.(type) {
@@ -333,6 +357,37 @@ func Equal(a, b interface{}) bool {
 			return float64(x) == float64(y)
 		case float64:
 			return float64(x) == float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat(x).Equal(y)
+		}
+	case decimal.Decimal:
+		switch y := b.(type) {
+		case uint:
+			return x.Equal(decimal.NewFromUint64(uint64(y)))
+		case uint8:
+			return x.Equal(decimal.NewFromUint64(uint64(y)))
+		case uint16:
+			return x.Equal(decimal.NewFromUint64(uint64(y)))
+		case uint32:
+			return x.Equal(decimal.NewFromUint64(uint64(y)))
+		case uint64:
+			return x.Equal(decimal.NewFromUint64(y))
+		case int:
+			return x.Equal(decimal.NewFromInt(int64(y)))
+		case int8:
+			return x.Equal(decimal.NewFromInt32(int32(y)))
+		case int16:
+			return x.Equal(decimal.NewFromInt32(int32(y)))
+		case int32:
+			return x.Equal(decimal.NewFromInt32(y))
+		case int64:
+			return x.Equal(decimal.NewFromInt(y))
+		case float32:
+			return x.Equal(decimal.NewFromFloat32(y))
+		case float64:
+			return x.Equal(decimal.NewFromFloat(y))
+		case decimal.Decimal:
+			return x.Equal(y)
 		}
 	case []any:
 		switch y := b.(type) {
@@ -457,6 +512,16 @@ func Equal(a, b interface{}) bool {
 			}
 			return true
 		case []float64:
+			if len(x) != len(y) {
+				return false
+			}
+			for i := range x {
+				if !Equal(x[i], y[i]) {
+					return false
+				}
+			}
+			return true
+		case []decimal.Decimal:
 			if len(x) != len(y) {
 				return false
 			}
@@ -672,6 +737,21 @@ func Equal(a, b interface{}) bool {
 			}
 			return true
 		}
+	case []decimal.Decimal:
+		switch y := b.(type) {
+		case []any:
+			return Equal(y, x)
+		case []decimal.Decimal:
+			if len(x) != len(y) {
+				return false
+			}
+			for i := range x {
+				if x[i] != y[i] {
+					return false
+				}
+			}
+			return true
+		}
 	case string:
 		switch y := b.(type) {
 		case string:
@@ -727,6 +807,8 @@ func Less(a, b interface{}) bool {
 			return float64(x) < float64(y)
 		case float64:
 			return float64(x) < float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).LessThan(y)
 		}
 	case uint8:
 		switch y := b.(type) {
@@ -754,6 +836,8 @@ func Less(a, b interface{}) bool {
 			return float64(x) < float64(y)
 		case float64:
 			return float64(x) < float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).LessThan(y)
 		}
 	case uint16:
 		switch y := b.(type) {
@@ -781,6 +865,8 @@ func Less(a, b interface{}) bool {
 			return float64(x) < float64(y)
 		case float64:
 			return float64(x) < float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).LessThan(y)
 		}
 	case uint32:
 		switch y := b.(type) {
@@ -808,6 +894,8 @@ func Less(a, b interface{}) bool {
 			return float64(x) < float64(y)
 		case float64:
 			return float64(x) < float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).LessThan(y)
 		}
 	case uint64:
 		switch y := b.(type) {
@@ -835,6 +923,8 @@ func Less(a, b interface{}) bool {
 			return float64(x) < float64(y)
 		case float64:
 			return float64(x) < float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(x).LessThan(y)
 		}
 	case int:
 		switch y := b.(type) {
@@ -862,6 +952,8 @@ func Less(a, b interface{}) bool {
 			return float64(x) < float64(y)
 		case float64:
 			return float64(x) < float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(int64(x)).LessThan(y)
 		}
 	case int8:
 		switch y := b.(type) {
@@ -889,6 +981,8 @@ func Less(a, b interface{}) bool {
 			return float64(x) < float64(y)
 		case float64:
 			return float64(x) < float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).LessThan(y)
 		}
 	case int16:
 		switch y := b.(type) {
@@ -916,6 +1010,8 @@ func Less(a, b interface{}) bool {
 			return float64(x) < float64(y)
 		case float64:
 			return float64(x) < float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).LessThan(y)
 		}
 	case int32:
 		switch y := b.(type) {
@@ -943,6 +1039,8 @@ func Less(a, b interface{}) bool {
 			return float64(x) < float64(y)
 		case float64:
 			return float64(x) < float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(x).LessThan(y)
 		}
 	case int64:
 		switch y := b.(type) {
@@ -970,6 +1068,8 @@ func Less(a, b interface{}) bool {
 			return float64(x) < float64(y)
 		case float64:
 			return float64(x) < float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(x).LessThan(y)
 		}
 	case float32:
 		switch y := b.(type) {
@@ -997,6 +1097,8 @@ func Less(a, b interface{}) bool {
 			return float64(x) < float64(y)
 		case float64:
 			return float64(x) < float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat32(x).LessThan(y)
 		}
 	case float64:
 		switch y := b.(type) {
@@ -1024,6 +1126,37 @@ func Less(a, b interface{}) bool {
 			return float64(x) < float64(y)
 		case float64:
 			return float64(x) < float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat(x).LessThan(y)
+		}
+	case decimal.Decimal:
+		switch y := b.(type) {
+		case uint:
+			return x.LessThan(decimal.NewFromUint64(uint64(y)))
+		case uint8:
+			return x.LessThan(decimal.NewFromUint64(uint64(y)))
+		case uint16:
+			return x.LessThan(decimal.NewFromUint64(uint64(y)))
+		case uint32:
+			return x.LessThan(decimal.NewFromUint64(uint64(y)))
+		case uint64:
+			return x.LessThan(decimal.NewFromUint64(y))
+		case int:
+			return x.LessThan(decimal.NewFromInt(int64(y)))
+		case int8:
+			return x.LessThan(decimal.NewFromInt32(int32(y)))
+		case int16:
+			return x.LessThan(decimal.NewFromInt32(int32(y)))
+		case int32:
+			return x.LessThan(decimal.NewFromInt32(y))
+		case int64:
+			return x.LessThan(decimal.NewFromInt(y))
+		case float32:
+			return x.LessThan(decimal.NewFromFloat32(y))
+		case float64:
+			return x.LessThan(decimal.NewFromFloat(y))
+		case decimal.Decimal:
+			return x.LessThan(y)
 		}
 	case string:
 		switch y := b.(type) {
@@ -1072,6 +1205,8 @@ func More(a, b interface{}) bool {
 			return float64(x) > float64(y)
 		case float64:
 			return float64(x) > float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).GreaterThan(y)
 		}
 	case uint8:
 		switch y := b.(type) {
@@ -1099,6 +1234,8 @@ func More(a, b interface{}) bool {
 			return float64(x) > float64(y)
 		case float64:
 			return float64(x) > float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).GreaterThan(y)
 		}
 	case uint16:
 		switch y := b.(type) {
@@ -1126,6 +1263,8 @@ func More(a, b interface{}) bool {
 			return float64(x) > float64(y)
 		case float64:
 			return float64(x) > float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).GreaterThan(y)
 		}
 	case uint32:
 		switch y := b.(type) {
@@ -1153,6 +1292,8 @@ func More(a, b interface{}) bool {
 			return float64(x) > float64(y)
 		case float64:
 			return float64(x) > float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).GreaterThan(y)
 		}
 	case uint64:
 		switch y := b.(type) {
@@ -1180,6 +1321,8 @@ func More(a, b interface{}) bool {
 			return float64(x) > float64(y)
 		case float64:
 			return float64(x) > float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(x).GreaterThan(y)
 		}
 	case int:
 		switch y := b.(type) {
@@ -1207,6 +1350,8 @@ func More(a, b interface{}) bool {
 			return float64(x) > float64(y)
 		case float64:
 			return float64(x) > float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(int64(x)).GreaterThan(y)
 		}
 	case int8:
 		switch y := b.(type) {
@@ -1234,6 +1379,8 @@ func More(a, b interface{}) bool {
 			return float64(x) > float64(y)
 		case float64:
 			return float64(x) > float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).GreaterThan(y)
 		}
 	case int16:
 		switch y := b.(type) {
@@ -1261,6 +1408,8 @@ func More(a, b interface{}) bool {
 			return float64(x) > float64(y)
 		case float64:
 			return float64(x) > float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).GreaterThan(y)
 		}
 	case int32:
 		switch y := b.(type) {
@@ -1288,6 +1437,8 @@ func More(a, b interface{}) bool {
 			return float64(x) > float64(y)
 		case float64:
 			return float64(x) > float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(x).GreaterThan(y)
 		}
 	case int64:
 		switch y := b.(type) {
@@ -1315,6 +1466,8 @@ func More(a, b interface{}) bool {
 			return float64(x) > float64(y)
 		case float64:
 			return float64(x) > float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(x).GreaterThan(y)
 		}
 	case float32:
 		switch y := b.(type) {
@@ -1342,6 +1495,8 @@ func More(a, b interface{}) bool {
 			return float64(x) > float64(y)
 		case float64:
 			return float64(x) > float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat32(x).GreaterThan(y)
 		}
 	case float64:
 		switch y := b.(type) {
@@ -1369,6 +1524,37 @@ func More(a, b interface{}) bool {
 			return float64(x) > float64(y)
 		case float64:
 			return float64(x) > float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat(x).GreaterThan(y)
+		}
+	case decimal.Decimal:
+		switch y := b.(type) {
+		case uint:
+			return x.GreaterThan(decimal.NewFromUint64(uint64(y)))
+		case uint8:
+			return x.GreaterThan(decimal.NewFromUint64(uint64(y)))
+		case uint16:
+			return x.GreaterThan(decimal.NewFromUint64(uint64(y)))
+		case uint32:
+			return x.GreaterThan(decimal.NewFromUint64(uint64(y)))
+		case uint64:
+			return x.GreaterThan(decimal.NewFromUint64(y))
+		case int:
+			return x.GreaterThan(decimal.NewFromInt(int64(y)))
+		case int8:
+			return x.GreaterThan(decimal.NewFromInt32(int32(y)))
+		case int16:
+			return x.GreaterThan(decimal.NewFromInt32(int32(y)))
+		case int32:
+			return x.GreaterThan(decimal.NewFromInt32(y))
+		case int64:
+			return x.GreaterThan(decimal.NewFromInt(y))
+		case float32:
+			return x.GreaterThan(decimal.NewFromFloat32(y))
+		case float64:
+			return x.GreaterThan(decimal.NewFromFloat(y))
+		case decimal.Decimal:
+			return x.GreaterThan(y)
 		}
 	case string:
 		switch y := b.(type) {
@@ -1417,6 +1603,8 @@ func LessOrEqual(a, b interface{}) bool {
 			return float64(x) <= float64(y)
 		case float64:
 			return float64(x) <= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).LessThanOrEqual(y)
 		}
 	case uint8:
 		switch y := b.(type) {
@@ -1444,6 +1632,8 @@ func LessOrEqual(a, b interface{}) bool {
 			return float64(x) <= float64(y)
 		case float64:
 			return float64(x) <= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).LessThanOrEqual(y)
 		}
 	case uint16:
 		switch y := b.(type) {
@@ -1471,6 +1661,8 @@ func LessOrEqual(a, b interface{}) bool {
 			return float64(x) <= float64(y)
 		case float64:
 			return float64(x) <= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).LessThanOrEqual(y)
 		}
 	case uint32:
 		switch y := b.(type) {
@@ -1498,6 +1690,8 @@ func LessOrEqual(a, b interface{}) bool {
 			return float64(x) <= float64(y)
 		case float64:
 			return float64(x) <= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).LessThanOrEqual(y)
 		}
 	case uint64:
 		switch y := b.(type) {
@@ -1525,6 +1719,8 @@ func LessOrEqual(a, b interface{}) bool {
 			return float64(x) <= float64(y)
 		case float64:
 			return float64(x) <= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(x).LessThanOrEqual(y)
 		}
 	case int:
 		switch y := b.(type) {
@@ -1552,6 +1748,8 @@ func LessOrEqual(a, b interface{}) bool {
 			return float64(x) <= float64(y)
 		case float64:
 			return float64(x) <= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(int64(x)).LessThanOrEqual(y)
 		}
 	case int8:
 		switch y := b.(type) {
@@ -1579,6 +1777,8 @@ func LessOrEqual(a, b interface{}) bool {
 			return float64(x) <= float64(y)
 		case float64:
 			return float64(x) <= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).LessThanOrEqual(y)
 		}
 	case int16:
 		switch y := b.(type) {
@@ -1606,6 +1806,8 @@ func LessOrEqual(a, b interface{}) bool {
 			return float64(x) <= float64(y)
 		case float64:
 			return float64(x) <= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).LessThanOrEqual(y)
 		}
 	case int32:
 		switch y := b.(type) {
@@ -1633,6 +1835,8 @@ func LessOrEqual(a, b interface{}) bool {
 			return float64(x) <= float64(y)
 		case float64:
 			return float64(x) <= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(x).LessThanOrEqual(y)
 		}
 	case int64:
 		switch y := b.(type) {
@@ -1660,6 +1864,8 @@ func LessOrEqual(a, b interface{}) bool {
 			return float64(x) <= float64(y)
 		case float64:
 			return float64(x) <= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(x).LessThanOrEqual(y)
 		}
 	case float32:
 		switch y := b.(type) {
@@ -1687,6 +1893,8 @@ func LessOrEqual(a, b interface{}) bool {
 			return float64(x) <= float64(y)
 		case float64:
 			return float64(x) <= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat32(x).LessThanOrEqual(y)
 		}
 	case float64:
 		switch y := b.(type) {
@@ -1714,6 +1922,37 @@ func LessOrEqual(a, b interface{}) bool {
 			return float64(x) <= float64(y)
 		case float64:
 			return float64(x) <= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat(x).LessThanOrEqual(y)
+		}
+	case decimal.Decimal:
+		switch y := b.(type) {
+		case uint:
+			return x.LessThanOrEqual(decimal.NewFromUint64(uint64(y)))
+		case uint8:
+			return x.LessThanOrEqual(decimal.NewFromUint64(uint64(y)))
+		case uint16:
+			return x.LessThanOrEqual(decimal.NewFromUint64(uint64(y)))
+		case uint32:
+			return x.LessThanOrEqual(decimal.NewFromUint64(uint64(y)))
+		case uint64:
+			return x.LessThanOrEqual(decimal.NewFromUint64(y))
+		case int:
+			return x.LessThanOrEqual(decimal.NewFromInt(int64(y)))
+		case int8:
+			return x.LessThanOrEqual(decimal.NewFromInt32(int32(y)))
+		case int16:
+			return x.LessThanOrEqual(decimal.NewFromInt32(int32(y)))
+		case int32:
+			return x.LessThanOrEqual(decimal.NewFromInt32(y))
+		case int64:
+			return x.LessThanOrEqual(decimal.NewFromInt(y))
+		case float32:
+			return x.LessThanOrEqual(decimal.NewFromFloat32(y))
+		case float64:
+			return x.LessThanOrEqual(decimal.NewFromFloat(y))
+		case decimal.Decimal:
+			return x.LessThanOrEqual(y)
 		}
 	case string:
 		switch y := b.(type) {
@@ -1762,6 +2001,8 @@ func MoreOrEqual(a, b interface{}) bool {
 			return float64(x) >= float64(y)
 		case float64:
 			return float64(x) >= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).GreaterThanOrEqual(y)
 		}
 	case uint8:
 		switch y := b.(type) {
@@ -1789,6 +2030,8 @@ func MoreOrEqual(a, b interface{}) bool {
 			return float64(x) >= float64(y)
 		case float64:
 			return float64(x) >= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).GreaterThanOrEqual(y)
 		}
 	case uint16:
 		switch y := b.(type) {
@@ -1816,6 +2059,8 @@ func MoreOrEqual(a, b interface{}) bool {
 			return float64(x) >= float64(y)
 		case float64:
 			return float64(x) >= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).GreaterThanOrEqual(y)
 		}
 	case uint32:
 		switch y := b.(type) {
@@ -1843,6 +2088,8 @@ func MoreOrEqual(a, b interface{}) bool {
 			return float64(x) >= float64(y)
 		case float64:
 			return float64(x) >= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).GreaterThanOrEqual(y)
 		}
 	case uint64:
 		switch y := b.(type) {
@@ -1870,6 +2117,8 @@ func MoreOrEqual(a, b interface{}) bool {
 			return float64(x) >= float64(y)
 		case float64:
 			return float64(x) >= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(x).GreaterThanOrEqual(y)
 		}
 	case int:
 		switch y := b.(type) {
@@ -1897,6 +2146,8 @@ func MoreOrEqual(a, b interface{}) bool {
 			return float64(x) >= float64(y)
 		case float64:
 			return float64(x) >= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(int64(x)).GreaterThanOrEqual(y)
 		}
 	case int8:
 		switch y := b.(type) {
@@ -1924,6 +2175,8 @@ func MoreOrEqual(a, b interface{}) bool {
 			return float64(x) >= float64(y)
 		case float64:
 			return float64(x) >= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).GreaterThanOrEqual(y)
 		}
 	case int16:
 		switch y := b.(type) {
@@ -1951,6 +2204,8 @@ func MoreOrEqual(a, b interface{}) bool {
 			return float64(x) >= float64(y)
 		case float64:
 			return float64(x) >= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).GreaterThanOrEqual(y)
 		}
 	case int32:
 		switch y := b.(type) {
@@ -1978,6 +2233,8 @@ func MoreOrEqual(a, b interface{}) bool {
 			return float64(x) >= float64(y)
 		case float64:
 			return float64(x) >= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(x).GreaterThanOrEqual(y)
 		}
 	case int64:
 		switch y := b.(type) {
@@ -2005,6 +2262,8 @@ func MoreOrEqual(a, b interface{}) bool {
 			return float64(x) >= float64(y)
 		case float64:
 			return float64(x) >= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(x).GreaterThanOrEqual(y)
 		}
 	case float32:
 		switch y := b.(type) {
@@ -2032,6 +2291,8 @@ func MoreOrEqual(a, b interface{}) bool {
 			return float64(x) >= float64(y)
 		case float64:
 			return float64(x) >= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat32(x).GreaterThanOrEqual(y)
 		}
 	case float64:
 		switch y := b.(type) {
@@ -2059,6 +2320,37 @@ func MoreOrEqual(a, b interface{}) bool {
 			return float64(x) >= float64(y)
 		case float64:
 			return float64(x) >= float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat(x).GreaterThanOrEqual(y)
+		}
+	case decimal.Decimal:
+		switch y := b.(type) {
+		case uint:
+			return x.GreaterThanOrEqual(decimal.NewFromUint64(uint64(y)))
+		case uint8:
+			return x.GreaterThanOrEqual(decimal.NewFromUint64(uint64(y)))
+		case uint16:
+			return x.GreaterThanOrEqual(decimal.NewFromUint64(uint64(y)))
+		case uint32:
+			return x.GreaterThanOrEqual(decimal.NewFromUint64(uint64(y)))
+		case uint64:
+			return x.GreaterThanOrEqual(decimal.NewFromUint64(y))
+		case int:
+			return x.GreaterThanOrEqual(decimal.NewFromInt(int64(y)))
+		case int8:
+			return x.GreaterThanOrEqual(decimal.NewFromInt32(int32(y)))
+		case int16:
+			return x.GreaterThanOrEqual(decimal.NewFromInt32(int32(y)))
+		case int32:
+			return x.GreaterThanOrEqual(decimal.NewFromInt32(y))
+		case int64:
+			return x.GreaterThanOrEqual(decimal.NewFromInt(y))
+		case float32:
+			return x.GreaterThanOrEqual(decimal.NewFromFloat32(y))
+		case float64:
+			return x.GreaterThanOrEqual(decimal.NewFromFloat(y))
+		case decimal.Decimal:
+			return x.GreaterThanOrEqual(y)
 		}
 	case string:
 		switch y := b.(type) {
@@ -2107,6 +2399,8 @@ func Add(a, b interface{}) interface{} {
 			return float64(x) + float64(y)
 		case float64:
 			return float64(x) + float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Add(y)
 		}
 	case uint8:
 		switch y := b.(type) {
@@ -2134,6 +2428,8 @@ func Add(a, b interface{}) interface{} {
 			return float64(x) + float64(y)
 		case float64:
 			return float64(x) + float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Add(y)
 		}
 	case uint16:
 		switch y := b.(type) {
@@ -2161,6 +2457,8 @@ func Add(a, b interface{}) interface{} {
 			return float64(x) + float64(y)
 		case float64:
 			return float64(x) + float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Add(y)
 		}
 	case uint32:
 		switch y := b.(type) {
@@ -2188,6 +2486,8 @@ func Add(a, b interface{}) interface{} {
 			return float64(x) + float64(y)
 		case float64:
 			return float64(x) + float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Add(y)
 		}
 	case uint64:
 		switch y := b.(type) {
@@ -2215,6 +2515,8 @@ func Add(a, b interface{}) interface{} {
 			return float64(x) + float64(y)
 		case float64:
 			return float64(x) + float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(x).Add(y)
 		}
 	case int:
 		switch y := b.(type) {
@@ -2242,6 +2544,8 @@ func Add(a, b interface{}) interface{} {
 			return float64(x) + float64(y)
 		case float64:
 			return float64(x) + float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(int64(x)).Add(y)
 		}
 	case int8:
 		switch y := b.(type) {
@@ -2269,6 +2573,8 @@ func Add(a, b interface{}) interface{} {
 			return float64(x) + float64(y)
 		case float64:
 			return float64(x) + float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).Add(y)
 		}
 	case int16:
 		switch y := b.(type) {
@@ -2296,6 +2602,8 @@ func Add(a, b interface{}) interface{} {
 			return float64(x) + float64(y)
 		case float64:
 			return float64(x) + float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).Add(y)
 		}
 	case int32:
 		switch y := b.(type) {
@@ -2323,6 +2631,8 @@ func Add(a, b interface{}) interface{} {
 			return float64(x) + float64(y)
 		case float64:
 			return float64(x) + float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(x).Add(y)
 		}
 	case int64:
 		switch y := b.(type) {
@@ -2350,6 +2660,8 @@ func Add(a, b interface{}) interface{} {
 			return float64(x) + float64(y)
 		case float64:
 			return float64(x) + float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(x).Add(y)
 		}
 	case float32:
 		switch y := b.(type) {
@@ -2377,6 +2689,8 @@ func Add(a, b interface{}) interface{} {
 			return float64(x) + float64(y)
 		case float64:
 			return float64(x) + float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat32(x).Add(y)
 		}
 	case float64:
 		switch y := b.(type) {
@@ -2404,6 +2718,37 @@ func Add(a, b interface{}) interface{} {
 			return float64(x) + float64(y)
 		case float64:
 			return float64(x) + float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat(x).Add(y)
+		}
+	case decimal.Decimal:
+		switch y := b.(type) {
+		case uint:
+			return x.Add(decimal.NewFromUint64(uint64(y)))
+		case uint8:
+			return x.Add(decimal.NewFromUint64(uint64(y)))
+		case uint16:
+			return x.Add(decimal.NewFromUint64(uint64(y)))
+		case uint32:
+			return x.Add(decimal.NewFromUint64(uint64(y)))
+		case uint64:
+			return x.Add(decimal.NewFromUint64(y))
+		case int:
+			return x.Add(decimal.NewFromInt(int64(y)))
+		case int8:
+			return x.Add(decimal.NewFromInt32(int32(y)))
+		case int16:
+			return x.Add(decimal.NewFromInt32(int32(y)))
+		case int32:
+			return x.Add(decimal.NewFromInt32(y))
+		case int64:
+			return x.Add(decimal.NewFromInt(y))
+		case float32:
+			return x.Add(decimal.NewFromFloat32(y))
+		case float64:
+			return x.Add(decimal.NewFromFloat(y))
+		case decimal.Decimal:
+			return x.Add(y)
 		}
 	case string:
 		switch y := b.(type) {
@@ -2454,6 +2799,8 @@ func Subtract(a, b interface{}) interface{} {
 			return float64(x) - float64(y)
 		case float64:
 			return float64(x) - float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Sub(y)
 		}
 	case uint8:
 		switch y := b.(type) {
@@ -2481,6 +2828,8 @@ func Subtract(a, b interface{}) interface{} {
 			return float64(x) - float64(y)
 		case float64:
 			return float64(x) - float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Sub(y)
 		}
 	case uint16:
 		switch y := b.(type) {
@@ -2508,6 +2857,8 @@ func Subtract(a, b interface{}) interface{} {
 			return float64(x) - float64(y)
 		case float64:
 			return float64(x) - float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Sub(y)
 		}
 	case uint32:
 		switch y := b.(type) {
@@ -2535,6 +2886,8 @@ func Subtract(a, b interface{}) interface{} {
 			return float64(x) - float64(y)
 		case float64:
 			return float64(x) - float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Sub(y)
 		}
 	case uint64:
 		switch y := b.(type) {
@@ -2562,6 +2915,8 @@ func Subtract(a, b interface{}) interface{} {
 			return float64(x) - float64(y)
 		case float64:
 			return float64(x) - float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(x).Sub(y)
 		}
 	case int:
 		switch y := b.(type) {
@@ -2589,6 +2944,8 @@ func Subtract(a, b interface{}) interface{} {
 			return float64(x) - float64(y)
 		case float64:
 			return float64(x) - float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(int64(x)).Sub(y)
 		}
 	case int8:
 		switch y := b.(type) {
@@ -2616,6 +2973,8 @@ func Subtract(a, b interface{}) interface{} {
 			return float64(x) - float64(y)
 		case float64:
 			return float64(x) - float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).Sub(y)
 		}
 	case int16:
 		switch y := b.(type) {
@@ -2643,6 +3002,8 @@ func Subtract(a, b interface{}) interface{} {
 			return float64(x) - float64(y)
 		case float64:
 			return float64(x) - float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).Sub(y)
 		}
 	case int32:
 		switch y := b.(type) {
@@ -2670,6 +3031,8 @@ func Subtract(a, b interface{}) interface{} {
 			return float64(x) - float64(y)
 		case float64:
 			return float64(x) - float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(x).Sub(y)
 		}
 	case int64:
 		switch y := b.(type) {
@@ -2697,6 +3060,8 @@ func Subtract(a, b interface{}) interface{} {
 			return float64(x) - float64(y)
 		case float64:
 			return float64(x) - float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(x).Sub(y)
 		}
 	case float32:
 		switch y := b.(type) {
@@ -2724,6 +3089,8 @@ func Subtract(a, b interface{}) interface{} {
 			return float64(x) - float64(y)
 		case float64:
 			return float64(x) - float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat32(x).Sub(y)
 		}
 	case float64:
 		switch y := b.(type) {
@@ -2751,6 +3118,37 @@ func Subtract(a, b interface{}) interface{} {
 			return float64(x) - float64(y)
 		case float64:
 			return float64(x) - float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat(x).Sub(y)
+		}
+	case decimal.Decimal:
+		switch y := b.(type) {
+		case uint:
+			return x.Sub(decimal.NewFromUint64(uint64(y)))
+		case uint8:
+			return x.Sub(decimal.NewFromUint64(uint64(y)))
+		case uint16:
+			return x.Sub(decimal.NewFromUint64(uint64(y)))
+		case uint32:
+			return x.Sub(decimal.NewFromUint64(uint64(y)))
+		case uint64:
+			return x.Sub(decimal.NewFromUint64(y))
+		case int:
+			return x.Sub(decimal.NewFromInt(int64(y)))
+		case int8:
+			return x.Sub(decimal.NewFromInt32(int32(y)))
+		case int16:
+			return x.Sub(decimal.NewFromInt32(int32(y)))
+		case int32:
+			return x.Sub(decimal.NewFromInt32(y))
+		case int64:
+			return x.Sub(decimal.NewFromInt(y))
+		case float32:
+			return x.Sub(decimal.NewFromFloat32(y))
+		case float64:
+			return x.Sub(decimal.NewFromFloat(y))
+		case decimal.Decimal:
+			return x.Sub(y)
 		}
 	case time.Time:
 		switch y := b.(type) {
@@ -2796,6 +3194,8 @@ func Multiply(a, b interface{}) interface{} {
 			return float64(x) * float64(y)
 		case float64:
 			return float64(x) * float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Mul(y)
 		case time.Duration:
 			return time.Duration(x) * time.Duration(y)
 		}
@@ -2825,6 +3225,8 @@ func Multiply(a, b interface{}) interface{} {
 			return float64(x) * float64(y)
 		case float64:
 			return float64(x) * float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Mul(y)
 		case time.Duration:
 			return time.Duration(x) * time.Duration(y)
 		}
@@ -2854,6 +3256,8 @@ func Multiply(a, b interface{}) interface{} {
 			return float64(x) * float64(y)
 		case float64:
 			return float64(x) * float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Mul(y)
 		case time.Duration:
 			return time.Duration(x) * time.Duration(y)
 		}
@@ -2883,6 +3287,8 @@ func Multiply(a, b interface{}) interface{} {
 			return float64(x) * float64(y)
 		case float64:
 			return float64(x) * float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Mul(y)
 		case time.Duration:
 			return time.Duration(x) * time.Duration(y)
 		}
@@ -2912,6 +3318,8 @@ func Multiply(a, b interface{}) interface{} {
 			return float64(x) * float64(y)
 		case float64:
 			return float64(x) * float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(x).Mul(y)
 		case time.Duration:
 			return time.Duration(x) * time.Duration(y)
 		}
@@ -2941,6 +3349,8 @@ func Multiply(a, b interface{}) interface{} {
 			return float64(x) * float64(y)
 		case float64:
 			return float64(x) * float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(int64(x)).Mul(y)
 		case time.Duration:
 			return time.Duration(x) * time.Duration(y)
 		}
@@ -2970,6 +3380,8 @@ func Multiply(a, b interface{}) interface{} {
 			return float64(x) * float64(y)
 		case float64:
 			return float64(x) * float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).Mul(y)
 		case time.Duration:
 			return time.Duration(x) * time.Duration(y)
 		}
@@ -2999,6 +3411,8 @@ func Multiply(a, b interface{}) interface{} {
 			return float64(x) * float64(y)
 		case float64:
 			return float64(x) * float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).Mul(y)
 		case time.Duration:
 			return time.Duration(x) * time.Duration(y)
 		}
@@ -3028,6 +3442,8 @@ func Multiply(a, b interface{}) interface{} {
 			return float64(x) * float64(y)
 		case float64:
 			return float64(x) * float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(x).Mul(y)
 		case time.Duration:
 			return time.Duration(x) * time.Duration(y)
 		}
@@ -3057,6 +3473,8 @@ func Multiply(a, b interface{}) interface{} {
 			return float64(x) * float64(y)
 		case float64:
 			return float64(x) * float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(x).Mul(y)
 		case time.Duration:
 			return time.Duration(x) * time.Duration(y)
 		}
@@ -3086,6 +3504,8 @@ func Multiply(a, b interface{}) interface{} {
 			return float64(x) * float64(y)
 		case float64:
 			return float64(x) * float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat32(x).Mul(y)
 		case time.Duration:
 			return float64(x) * float64(y)
 		}
@@ -3115,8 +3535,41 @@ func Multiply(a, b interface{}) interface{} {
 			return float64(x) * float64(y)
 		case float64:
 			return float64(x) * float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat(x).Mul(y)
 		case time.Duration:
 			return float64(x) * float64(y)
+		}
+	case decimal.Decimal:
+		switch y := b.(type) {
+		case uint:
+			return x.Mul(decimal.NewFromUint64(uint64(y)))
+		case uint8:
+			return x.Mul(decimal.NewFromUint64(uint64(y)))
+		case uint16:
+			return x.Mul(decimal.NewFromUint64(uint64(y)))
+		case uint32:
+			return x.Mul(decimal.NewFromUint64(uint64(y)))
+		case uint64:
+			return x.Mul(decimal.NewFromUint64(y))
+		case int:
+			return x.Mul(decimal.NewFromInt(int64(y)))
+		case int8:
+			return x.Mul(decimal.NewFromInt32(int32(y)))
+		case int16:
+			return x.Mul(decimal.NewFromInt32(int32(y)))
+		case int32:
+			return x.Mul(decimal.NewFromInt32(y))
+		case int64:
+			return x.Mul(decimal.NewFromInt(y))
+		case float32:
+			return x.Mul(decimal.NewFromFloat32(y))
+		case float64:
+			return x.Mul(decimal.NewFromFloat(y))
+		case decimal.Decimal:
+			return x.Mul(y)
+		case time.Duration:
+			return x.Mul(decimal.NewFromInt(int64(y)))
 		}
 	case time.Duration:
 		switch y := b.(type) {
@@ -3144,6 +3597,8 @@ func Multiply(a, b interface{}) interface{} {
 			return float64(x) * float64(y)
 		case float64:
 			return float64(x) * float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(int64(x)).Mul(y)
 		case time.Duration:
 			return time.Duration(x) * time.Duration(y)
 		}
@@ -3151,7 +3606,7 @@ func Multiply(a, b interface{}) interface{} {
 	panic(fmt.Sprintf("invalid operation: %T * %T", a, b))
 }
 
-func Divide(a, b interface{}) float64 {
+func Divide(a, b interface{}) interface{} {
 	switch x := a.(type) {
 	case uint:
 		switch y := b.(type) {
@@ -3179,6 +3634,8 @@ func Divide(a, b interface{}) float64 {
 			return float64(x) / float64(y)
 		case float64:
 			return float64(x) / float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Div(y)
 		}
 	case uint8:
 		switch y := b.(type) {
@@ -3206,6 +3663,8 @@ func Divide(a, b interface{}) float64 {
 			return float64(x) / float64(y)
 		case float64:
 			return float64(x) / float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Div(y)
 		}
 	case uint16:
 		switch y := b.(type) {
@@ -3233,6 +3692,8 @@ func Divide(a, b interface{}) float64 {
 			return float64(x) / float64(y)
 		case float64:
 			return float64(x) / float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Div(y)
 		}
 	case uint32:
 		switch y := b.(type) {
@@ -3260,6 +3721,8 @@ func Divide(a, b interface{}) float64 {
 			return float64(x) / float64(y)
 		case float64:
 			return float64(x) / float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(uint64(x)).Div(y)
 		}
 	case uint64:
 		switch y := b.(type) {
@@ -3287,6 +3750,8 @@ func Divide(a, b interface{}) float64 {
 			return float64(x) / float64(y)
 		case float64:
 			return float64(x) / float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromUint64(x).Div(y)
 		}
 	case int:
 		switch y := b.(type) {
@@ -3314,6 +3779,8 @@ func Divide(a, b interface{}) float64 {
 			return float64(x) / float64(y)
 		case float64:
 			return float64(x) / float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(int64(x)).Div(y)
 		}
 	case int8:
 		switch y := b.(type) {
@@ -3341,6 +3808,8 @@ func Divide(a, b interface{}) float64 {
 			return float64(x) / float64(y)
 		case float64:
 			return float64(x) / float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).Div(y)
 		}
 	case int16:
 		switch y := b.(type) {
@@ -3368,6 +3837,8 @@ func Divide(a, b interface{}) float64 {
 			return float64(x) / float64(y)
 		case float64:
 			return float64(x) / float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(int32(x)).Div(y)
 		}
 	case int32:
 		switch y := b.(type) {
@@ -3395,6 +3866,8 @@ func Divide(a, b interface{}) float64 {
 			return float64(x) / float64(y)
 		case float64:
 			return float64(x) / float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt32(x).Div(y)
 		}
 	case int64:
 		switch y := b.(type) {
@@ -3422,6 +3895,8 @@ func Divide(a, b interface{}) float64 {
 			return float64(x) / float64(y)
 		case float64:
 			return float64(x) / float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromInt(x).Div(y)
 		}
 	case float32:
 		switch y := b.(type) {
@@ -3449,6 +3924,8 @@ func Divide(a, b interface{}) float64 {
 			return float64(x) / float64(y)
 		case float64:
 			return float64(x) / float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat32(x).Div(y)
 		}
 	case float64:
 		switch y := b.(type) {
@@ -3476,6 +3953,37 @@ func Divide(a, b interface{}) float64 {
 			return float64(x) / float64(y)
 		case float64:
 			return float64(x) / float64(y)
+		case decimal.Decimal:
+			return decimal.NewFromFloat(x).Div(y)
+		}
+	case decimal.Decimal:
+		switch y := b.(type) {
+		case uint:
+			return x.Div(decimal.NewFromUint64(uint64(y)))
+		case uint8:
+			return x.Div(decimal.NewFromUint64(uint64(y)))
+		case uint16:
+			return x.Div(decimal.NewFromUint64(uint64(y)))
+		case uint32:
+			return x.Div(decimal.NewFromUint64(uint64(y)))
+		case uint64:
+			return x.Div(decimal.NewFromUint64(y))
+		case int:
+			return x.Div(decimal.NewFromInt(int64(y)))
+		case int8:
+			return x.Div(decimal.NewFromInt32(int32(y)))
+		case int16:
+			return x.Div(decimal.NewFromInt32(int32(y)))
+		case int32:
+			return x.Div(decimal.NewFromInt32(y))
+		case int64:
+			return x.Div(decimal.NewFromInt(y))
+		case float32:
+			return x.Div(decimal.NewFromFloat32(y))
+		case float64:
+			return x.Div(decimal.NewFromFloat(y))
+		case decimal.Decimal:
+			return x.Div(y)
 		}
 	}
 	panic(fmt.Sprintf("invalid operation: %T / %T", a, b))
@@ -3505,6 +4013,8 @@ func Modulo(a, b interface{}) int {
 			return int(x) % int(y)
 		case int64:
 			return int(x) % int(y)
+		case decimal.Decimal:
+			return int(decimal.NewFromUint64(uint64(x)).Mod(y).IntPart())
 		}
 	case uint8:
 		switch y := b.(type) {
@@ -3528,6 +4038,8 @@ func Modulo(a, b interface{}) int {
 			return int(x) % int(y)
 		case int64:
 			return int(x) % int(y)
+		case decimal.Decimal:
+			return int(decimal.NewFromUint64(uint64(x)).Mod(y).IntPart())
 		}
 	case uint16:
 		switch y := b.(type) {
@@ -3551,6 +4063,8 @@ func Modulo(a, b interface{}) int {
 			return int(x) % int(y)
 		case int64:
 			return int(x) % int(y)
+		case decimal.Decimal:
+			return int(decimal.NewFromUint64(uint64(x)).Mod(y).IntPart())
 		}
 	case uint32:
 		switch y := b.(type) {
@@ -3574,6 +4088,8 @@ func Modulo(a, b interface{}) int {
 			return int(x) % int(y)
 		case int64:
 			return int(x) % int(y)
+		case decimal.Decimal:
+			return int(decimal.NewFromUint64(uint64(x)).Mod(y).IntPart())
 		}
 	case uint64:
 		switch y := b.(type) {
@@ -3597,6 +4113,8 @@ func Modulo(a, b interface{}) int {
 			return int(x) % int(y)
 		case int64:
 			return int(x) % int(y)
+		case decimal.Decimal:
+			return int(decimal.NewFromUint64(x).Mod(y).IntPart())
 		}
 	case int:
 		switch y := b.(type) {
@@ -3620,6 +4138,8 @@ func Modulo(a, b interface{}) int {
 			return int(x) % int(y)
 		case int64:
 			return int(x) % int(y)
+		case decimal.Decimal:
+			return int(decimal.NewFromInt(int64(x)).Mod(y).IntPart())
 		}
 	case int8:
 		switch y := b.(type) {
@@ -3643,6 +4163,8 @@ func Modulo(a, b interface{}) int {
 			return int(x) % int(y)
 		case int64:
 			return int(x) % int(y)
+		case decimal.Decimal:
+			return int(decimal.NewFromInt32(int32(x)).Mod(y).IntPart())
 		}
 	case int16:
 		switch y := b.(type) {
@@ -3666,6 +4188,8 @@ func Modulo(a, b interface{}) int {
 			return int(x) % int(y)
 		case int64:
 			return int(x) % int(y)
+		case decimal.Decimal:
+			return int(decimal.NewFromInt32(int32(x)).Mod(y).IntPart())
 		}
 	case int32:
 		switch y := b.(type) {
@@ -3689,6 +4213,8 @@ func Modulo(a, b interface{}) int {
 			return int(x) % int(y)
 		case int64:
 			return int(x) % int(y)
+		case decimal.Decimal:
+			return int(decimal.NewFromInt32(x).Mod(y).IntPart())
 		}
 	case int64:
 		switch y := b.(type) {
@@ -3712,6 +4238,33 @@ func Modulo(a, b interface{}) int {
 			return int(x) % int(y)
 		case int64:
 			return int(x) % int(y)
+		case decimal.Decimal:
+			return int(decimal.NewFromInt(x).Mod(y).IntPart())
+		}
+	case decimal.Decimal:
+		switch y := b.(type) {
+		case uint:
+			return int(x.Mod(decimal.NewFromUint64(uint64(y))).IntPart())
+		case uint8:
+			return int(x.Mod(decimal.NewFromUint64(uint64(y))).IntPart())
+		case uint16:
+			return int(x.Mod(decimal.NewFromUint64(uint64(y))).IntPart())
+		case uint32:
+			return int(x.Mod(decimal.NewFromUint64(uint64(y))).IntPart())
+		case uint64:
+			return int(x.Mod(decimal.NewFromUint64(y)).IntPart())
+		case int:
+			return int(x.Mod(decimal.NewFromInt(int64(y))).IntPart())
+		case int8:
+			return int(x.Mod(decimal.NewFromInt32(int32(y))).IntPart())
+		case int16:
+			return int(x.Mod(decimal.NewFromInt32(int32(y))).IntPart())
+		case int32:
+			return int(x.Mod(decimal.NewFromInt32(y)).IntPart())
+		case int64:
+			return int(x.Mod(decimal.NewFromInt(y)).IntPart())
+		case decimal.Decimal:
+			return int(x.Mod(y).IntPart())
 		}
 	}
 	panic(fmt.Sprintf("invalid operation: %T %% %T", a, b))

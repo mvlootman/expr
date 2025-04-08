@@ -43,13 +43,18 @@ func TestCheck(t *testing.T) {
 		{"Int64 % 1 > 0"},
 		{"IntPtr == Int"},
 		{"FloatPtr == 1 + 2."},
+		{"DecimalPtr == 1 + 2."},
 		{"1 + 2 + Float + 3 + 4 < 0"},
+		{"1 + 2 + Decimal + 3 + 4 < 0"},
 		{"1 + Int + Float == 0.5"},
+		{"1 + Int + Decimal == 0.5"},
 		{"-1 + +1 == 0"},
 		{"1 / 2 == 0"},
 		{"2**3 + 1 != 0"},
 		{"2^3 + 1 != 0"},
 		{"Float == 1"},
+		{"Decimal == 1"},
+		{"Decimal == 1.0"},
 		{"Float < 1.0"},
 		{"Float <= 1.0"},
 		{"Float > 1.0"},
@@ -136,17 +141,19 @@ func TestCheck(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
-			var err error
-			tree, err := parser.Parse(tt.input)
-			require.NoError(t, err)
+		t.Run(
+			tt.input, func(t *testing.T) {
+				var err error
+				tree, err := parser.Parse(tt.input)
+				require.NoError(t, err)
 
-			config := conf.New(mock.Env{})
-			expr.AsBool()(config)
+				config := conf.New(mock.Env{})
+				expr.AsBool()(config)
 
-			_, err = checker.Check(tree, config)
-			assert.NoError(t, err)
-		})
+				_, err = checker.Check(tree, config)
+				assert.NoError(t, err)
+			},
+		)
 	}
 }
 
@@ -190,481 +197,561 @@ too many arguments to call Method (1:5)
  | ....^
 `,
 		},
-		{`Foo.Bar()`, `
+		{
+			`Foo.Bar()`, `
 mock.Bar is not callable (1:5)
  | Foo.Bar()
  | ....^
 `,
 		},
-		{`Foo.Bar.Not()`, `
+		{
+			`Foo.Bar.Not()`, `
 type mock.Bar has no method Not (1:9)
  | Foo.Bar.Not()
  | ........^
 `,
 		},
-		{`ArrayOfFoo[0].Not`, `
+		{
+			`ArrayOfFoo[0].Not`, `
 type mock.Foo has no field Not (1:15)
  | ArrayOfFoo[0].Not
  | ..............^
 `,
 		},
-		{`ArrayOfFoo[Not]`, `
+		{
+			`ArrayOfFoo[Not]`, `
 unknown name Not (1:12)
  | ArrayOfFoo[Not]
  | ...........^
 `,
 		},
-		{`Not[0]`, `
+		{
+			`Not[0]`, `
 unknown name Not (1:1)
  | Not[0]
  | ^
 `,
 		},
-		{`Not.Bar`, `
+		{
+			`Not.Bar`, `
 unknown name Not (1:1)
  | Not.Bar
  | ^
 `,
 		},
-		{`ArrayOfFoo.Not`, `
+		{
+			`ArrayOfFoo.Not`, `
 array elements can only be selected using an integer (got string) (1:12)
  | ArrayOfFoo.Not
  | ...........^
 `,
 		},
-		{`FuncParam(true)`, `
+		{
+			`FuncParam(true)`, `
 not enough arguments to call FuncParam (1:1)
  | FuncParam(true)
  | ^
 `,
 		},
-		{`MapOfFoo['str'].Not`, `
+		{
+			`MapOfFoo['str'].Not`, `
 type mock.Foo has no field Not (1:17)
  | MapOfFoo['str'].Not
  | ................^
 `,
 		},
-		{`Bool && IntPtr`, `
+		{
+			`Bool && IntPtr`, `
 invalid operation: && (mismatched types bool and int) (1:6)
  | Bool && IntPtr
  | .....^
 `,
 		},
-		{`No ? Any.Bool : Any.Not`, `
+		{
+			`No ? Any.Bool : Any.Not`, `
 unknown name No (1:1)
  | No ? Any.Bool : Any.Not
  | ^
 `,
 		},
-		{`Any.Cond ? No : Any.Not`, `
+		{
+			`Any.Cond ? No : Any.Not`, `
 unknown name No (1:12)
  | Any.Cond ? No : Any.Not
  | ...........^
 `,
 		},
-		{`Any.Cond ? Any.Bool : No`, `
+		{
+			`Any.Cond ? Any.Bool : No`, `
 unknown name No (1:23)
  | Any.Cond ? Any.Bool : No
  | ......................^
 `,
 		},
-		{`MapOfAny ? Any : Any`, `
+		{
+			`MapOfAny ? Any : Any`, `
 non-bool expression (type map[string]interface {}) used as condition (1:1)
  | MapOfAny ? Any : Any
  | ^
 `,
 		},
-		{`String matches Int`, `
+		{
+			`String matches Int`, `
 invalid operation: matches (mismatched types string and int) (1:8)
  | String matches Int
  | .......^
 `,
 		},
-		{`Int matches String`, `
+		{
+			`Int matches String`, `
 invalid operation: matches (mismatched types int and string) (1:5)
  | Int matches String
  | ....^
 `,
 		},
-		{`String contains Int`, `
+		{
+			`String contains Int`, `
 invalid operation: contains (mismatched types string and int) (1:8)
  | String contains Int
  | .......^
 `,
 		},
-		{`Int contains String`, `
+		{
+			`Int contains String`, `
 invalid operation: contains (mismatched types int and string) (1:5)
  | Int contains String
  | ....^
 `,
 		},
-		{`!Not`, `
+		{
+			`!Not`, `
 unknown name Not (1:2)
  | !Not
  | .^
 `,
 		},
-		{`Not == Any`, `
+		{
+			`Not == Any`, `
 unknown name Not (1:1)
  | Not == Any
  | ^
 `,
 		},
-		{`[Not]`, `
+		{
+			`[Not]`, `
 unknown name Not (1:2)
  | [Not]
  | .^
 `,
 		},
-		{`{id: Not}`, `
+		{
+			`{id: Not}`, `
 unknown name Not (1:6)
  | {id: Not}
  | .....^
 `,
 		},
-		{`(nil).Foo`, `
+		{
+			`(nil).Foo`, `
 type nil has no field Foo (1:7)
  | (nil).Foo
  | ......^
 `,
 		},
-		{`(nil)['Foo']`, `
+		{
+			`(nil)['Foo']`, `
 type nil has no field Foo (1:6)
  | (nil)['Foo']
  | .....^
 `,
 		},
-		{`1 and false`, `
+		{
+			`1 and false`, `
 invalid operation: and (mismatched types int and bool) (1:3)
  | 1 and false
  | ..^
 `,
 		},
-		{`true or 0`, `
+		{
+			`true or 0`, `
 invalid operation: or (mismatched types bool and int) (1:6)
  | true or 0
  | .....^
 `,
 		},
-		{`not IntPtr`, `
+		{
+			`not IntPtr`, `
 invalid operation: not (mismatched type int) (1:1)
  | not IntPtr
  | ^
 `,
 		},
-		{`len(Not)`, `
+		{
+			`len(Not)`, `
 unknown name Not (1:5)
  | len(Not)
  | ....^
 `,
 		},
-		{`Int < Bool`, `
+		{
+			`Int < Bool`, `
 invalid operation: < (mismatched types int and bool) (1:5)
  | Int < Bool
  | ....^
 `,
 		},
-		{`Int > Bool`, `
+		{
+			`Int > Bool`, `
 invalid operation: > (mismatched types int and bool) (1:5)
  | Int > Bool
  | ....^
 `,
 		},
-		{`Int >= Bool`, `
+		{
+			`Int >= Bool`, `
 invalid operation: >= (mismatched types int and bool) (1:5)
  | Int >= Bool
  | ....^
 `,
 		},
-		{`Int <= Bool`, `
+		{
+			`Int <= Bool`, `
 invalid operation: <= (mismatched types int and bool) (1:5)
  | Int <= Bool
  | ....^
 `,
 		},
-		{`Int + Bool`, `
+		{
+			`Int + Bool`, `
 invalid operation: + (mismatched types int and bool) (1:5)
  | Int + Bool
  | ....^
 `,
 		},
-		{`Int - Bool`, `
+		{
+			`Int - Bool`, `
 invalid operation: - (mismatched types int and bool) (1:5)
  | Int - Bool
  | ....^
 `,
 		},
-		{`Int * Bool`, `
+		{
+			`Int * Bool`, `
 invalid operation: * (mismatched types int and bool) (1:5)
  | Int * Bool
  | ....^
 `,
 		},
-		{`Int / Bool`, `
+		{
+			`Int / Bool`, `
 invalid operation: / (mismatched types int and bool) (1:5)
  | Int / Bool
  | ....^
 `,
 		},
-		{`Int % Bool`, `
+		{
+			`Int % Bool`, `
 invalid operation: % (mismatched types int and bool) (1:5)
  | Int % Bool
  | ....^
 `,
 		},
-		{`Int ** Bool`, `
+		{
+			`Int ** Bool`, `
 invalid operation: ** (mismatched types int and bool) (1:5)
  | Int ** Bool
  | ....^
 `,
 		},
-		{`Int .. Bool`, `
+		{
+			`Int .. Bool`, `
 invalid operation: .. (mismatched types int and bool) (1:5)
  | Int .. Bool
  | ....^
 `,
 		},
-		{`Any > Foo`, `
+		{
+			`Any > Foo`, `
 invalid operation: > (mismatched types interface {} and mock.Foo) (1:5)
  | Any > Foo
  | ....^
 `,
 		},
-		{`NilFn() and BoolFn()`, `
+		{
+			`NilFn() and BoolFn()`, `
 func NilFn doesn't return value (1:1)
  | NilFn() and BoolFn()
  | ^
 `,
 		},
-		{`'str' in String`, `
+		{
+			`'str' in String`, `
 invalid operation: in (mismatched types string and string) (1:7)
  | 'str' in String
  | ......^
 `,
 		},
-		{`1 in Foo`, `
+		{
+			`1 in Foo`, `
 invalid operation: in (mismatched types int and mock.Foo) (1:3)
  | 1 in Foo
  | ..^
 `,
 		},
-		{`1 + ''`, `
+		{
+			`1 + ''`, `
 invalid operation: + (mismatched types int and string) (1:3)
  | 1 + ''
  | ..^
 `,
 		},
-		{`all(ArrayOfFoo, {#.Method() < 0})`, `
+		{
+			`all(ArrayOfFoo, {#.Method() < 0})`, `
 invalid operation: < (mismatched types mock.Bar and int) (1:29)
  | all(ArrayOfFoo, {#.Method() < 0})
  | ............................^
 `,
 		},
-		{`Variadic()`, `
+		{
+			`Variadic()`, `
 not enough arguments to call Variadic (1:1)
  | Variadic()
  | ^
 `,
 		},
-		{`Variadic(0, '')`, `
+		{
+			`Variadic(0, '')`, `
 cannot use string as argument (type int) to call Variadic  (1:13)
  | Variadic(0, '')
  | ............^
 `,
 		},
-		{`count(1, {#})`, `
+		{
+			`count(1, {#})`, `
 builtin count takes only array (got int) (1:7)
  | count(1, {#})
  | ......^
 `,
 		},
-		{`count(ArrayOfInt, {#})`, `
+		{
+			`count(ArrayOfInt, {#})`, `
 predicate should return boolean (got int) (1:19)
  | count(ArrayOfInt, {#})
  | ..................^
 `,
 		},
-		{`all(ArrayOfInt, {# + 1})`, `
+		{
+			`all(ArrayOfInt, {# + 1})`, `
 predicate should return boolean (got int) (1:17)
  | all(ArrayOfInt, {# + 1})
  | ................^
 `,
 		},
-		{`filter(ArrayOfFoo, {.Bar.Baz})`, `
+		{
+			`filter(ArrayOfFoo, {.Bar.Baz})`, `
 predicate should return boolean (got string) (1:20)
  | filter(ArrayOfFoo, {.Bar.Baz})
  | ...................^
 `,
 		},
-		{`find(ArrayOfFoo, {.Bar.Baz})`, `
+		{
+			`find(ArrayOfFoo, {.Bar.Baz})`, `
 predicate should return boolean (got string) (1:18)
  | find(ArrayOfFoo, {.Bar.Baz})
  | .................^
 `,
 		},
-		{`map(1, {2})`, `
+		{
+			`map(1, {2})`, `
 builtin map takes only array (got int) (1:5)
  | map(1, {2})
  | ....^
 `,
 		},
-		{`ArrayOfFoo[Foo]`, `
+		{
+			`ArrayOfFoo[Foo]`, `
 array elements can only be selected using an integer (got mock.Foo) (1:12)
  | ArrayOfFoo[Foo]
  | ...........^
 `,
 		},
-		{`ArrayOfFoo[Bool:]`, `
+		{
+			`ArrayOfFoo[Bool:]`, `
 non-integer slice index bool (1:12)
  | ArrayOfFoo[Bool:]
  | ...........^
 `,
 		},
-		{`ArrayOfFoo[1:Bool]`, `
+		{
+			`ArrayOfFoo[1:Bool]`, `
 non-integer slice index bool (1:14)
  | ArrayOfFoo[1:Bool]
  | .............^
 `,
 		},
-		{`Bool[:]`, `
+		{
+			`Bool[:]`, `
 cannot slice bool (1:5)
  | Bool[:]
  | ....^
 `,
 		},
-		{`FuncTooManyReturns()`, `
+		{
+			`FuncTooManyReturns()`, `
 func FuncTooManyReturns returns more then two values (1:1)
  | FuncTooManyReturns()
  | ^
 `,
 		},
-		{`len(42)`, `
+		{
+			`len(42)`, `
 invalid argument for len (type int) (1:1)
  | len(42)
  | ^
 `,
 		},
-		{`any(42, {#})`, `
+		{
+			`any(42, {#})`, `
 builtin any takes only array (got int) (1:5)
  | any(42, {#})
  | ....^
 `,
 		},
-		{`filter(42, {#})`, `
+		{
+			`filter(42, {#})`, `
 builtin filter takes only array (got int) (1:8)
  | filter(42, {#})
  | .......^
 `,
 		},
-		{`MapOfAny[0]`, `
+		{
+			`MapOfAny[0]`, `
 cannot use int to get an element from map[string]interface {} (1:10)
  | MapOfAny[0]
  | .........^
 `,
 		},
-		{`1 /* one */ + "2"`, `
+		{
+			`1 /* one */ + "2"`, `
 invalid operation: + (mismatched types int and string) (1:13)
  | 1 /* one */ + "2"
  | ............^
 `,
 		},
-		{`FuncTyped(42)`, `
+		{
+			`FuncTyped(42)`, `
 cannot use int as argument (type string) to call FuncTyped  (1:11)
  | FuncTyped(42)
  | ..........^
 `,
 		},
-		{`.0 in MapOfFoo`, `
+		{
+			`.0 in MapOfFoo`, `
 cannot use float64 as type string in map key (1:4)
  | .0 in MapOfFoo
  | ...^
 `,
 		},
-		{`1/2 in MapIntAny`, `
+		{
+			`1/2 in MapIntAny`, `
 cannot use float64 as type int in map key (1:5)
  | 1/2 in MapIntAny
  | ....^
 `,
 		},
-		{`0.5 in ArrayOfFoo`, `
+		{
+			`0.5 in ArrayOfFoo`, `
 cannot use float64 as type *mock.Foo in array (1:5)
  | 0.5 in ArrayOfFoo
  | ....^
 `,
 		},
-		{`repeat("0", 1/0)`, `
+		{
+			`repeat("0", 1/0)`, `
 cannot use float64 as argument (type int) to call repeat  (1:14)
  | repeat("0", 1/0)
  | .............^
 `,
 		},
-		{`let map = 42; map`, `
+		{
+			`let map = 42; map`, `
 cannot redeclare builtin map (1:5)
  | let map = 42; map
  | ....^
 `,
 		},
-		{`let len = 42; len`, `
+		{
+			`let len = 42; len`, `
 cannot redeclare builtin len (1:5)
  | let len = 42; len
  | ....^
 `,
 		},
-		{`let Float = 42; Float`, `
+		{
+			`let Float = 42; Float`, `
 cannot redeclare Float (1:5)
  | let Float = 42; Float
  | ....^
 `,
 		},
-		{`let foo = 1; let foo = 2; foo`, `
+		{
+			`let foo = 1; let foo = 2; foo`, `
 cannot redeclare variable foo (1:18)
  | let foo = 1; let foo = 2; foo
  | .................^
 `,
 		},
-		{`map(1..9, #unknown)`, `
+		{
+			`map(1..9, #unknown)`, `
 unknown pointer #unknown (1:11)
  | map(1..9, #unknown)
  | ..........^
 `,
 		},
-		{`42 in ["a", "b", "c"]`, `
+		{
+			`42 in ["a", "b", "c"]`, `
 cannot use int as type string in array (1:4)
  | 42 in ["a", "b", "c"]
  | ...^
 `,
 		},
-		{`"foo" matches "[+"`, `
+		{
+			`"foo" matches "[+"`, `
 error parsing regexp: missing closing ]: ` + "`[+`" + ` (1:7)
  | "foo" matches "[+"
  | ......^
 `,
 		},
-		{`get(false, 2)`, `
+		{
+			`get(false, 2)`, `
 type bool does not support indexing (1:5)
  | get(false, 2)
  | ....^
 `,
 		},
-		{`get(1..2, 0.5)`, `
+		{
+			`get(1..2, 0.5)`, `
 non-integer slice index float64 (1:11)
  | get(1..2, 0.5)
  | ..........^`,
 		},
-		{`trimPrefix(nil)`, `
+		{
+			`trimPrefix(nil)`, `
 cannot use nil as argument (type string) to call trimPrefix (1:12)
  | trimPrefix(nil)
  | ...........^
 `,
 		},
-		{`1..3 | filter(# > 1) | filter(# == "str")`,
+		{
+			`1..3 | filter(# > 1) | filter(# == "str")`,
 			`
 invalid operation: == (mismatched types int and string) (1:33)
  | 1..3 | filter(# > 1) | filter(# == "str")
  | ................................^
 `,
 		},
-		{`1..3 | map("str") | filter(# > 1)`,
+		{
+			`1..3 | map("str") | filter(# > 1)`,
 			`
 invalid operation: > (mismatched types string and int) (1:30)
  | 1..3 | map("str") | filter(# > 1)
@@ -682,17 +769,19 @@ invalid operation: + (mismatched types int and bool) (1:6)
 	}
 
 	for _, tt := range errorTests {
-		t.Run(tt.code, func(t *testing.T) {
-			tree, err := parser.Parse(tt.code)
-			require.NoError(t, err)
+		t.Run(
+			tt.code, func(t *testing.T) {
+				tree, err := parser.Parse(tt.code)
+				require.NoError(t, err)
 
-			_, err = checker.Check(tree, conf.New(mock.Env{}))
-			if err == nil {
-				err = fmt.Errorf("<nil>")
-			}
+				_, err = checker.Check(tree, conf.New(mock.Env{}))
+				if err == nil {
+					err = fmt.Errorf("<nil>")
+				}
 
-			assert.Equal(t, strings.Trim(tt.err, "\n"), err.Error())
-		})
+				assert.Equal(t, strings.Trim(tt.err, "\n"), err.Error())
+			},
+		)
 	}
 }
 
@@ -756,11 +845,13 @@ func TestCheck_TaggedFieldName(t *testing.T) {
 	require.NoError(t, err)
 
 	config := conf.CreateNew()
-	expr.Env(struct {
-		x struct {
-			y bool `expr:"bar"`
-		} `expr:"foo"`
-	}{})(config)
+	expr.Env(
+		struct {
+			x struct {
+				y bool `expr:"bar"`
+			} `expr:"foo"`
+		}{},
+	)(config)
 	expr.AsBool()(config)
 
 	_, err = checker.Check(tree, config)
@@ -864,36 +955,40 @@ func TestCheck_works_with_nil_types(t *testing.T) {
 }
 
 func TestCheck_cast_to_expected_works_with_interface(t *testing.T) {
-	t.Run("float64", func(t *testing.T) {
-		type Env struct {
-			Any any
-		}
+	t.Run(
+		"float64", func(t *testing.T) {
+			type Env struct {
+				Any any
+			}
 
-		tree, err := parser.Parse("Any")
-		require.NoError(t, err)
+			tree, err := parser.Parse("Any")
+			require.NoError(t, err)
 
-		config := conf.New(Env{})
-		expr.AsFloat64()(config)
-		expr.AsAny()(config)
+			config := conf.New(Env{})
+			expr.AsFloat64()(config)
+			expr.AsAny()(config)
 
-		_, err = checker.Check(tree, config)
-		require.NoError(t, err)
-	})
+			_, err = checker.Check(tree, config)
+			require.NoError(t, err)
+		},
+	)
 
-	t.Run("kind", func(t *testing.T) {
-		env := map[string]any{
-			"Any": any("foo"),
-		}
+	t.Run(
+		"kind", func(t *testing.T) {
+			env := map[string]any{
+				"Any": any("foo"),
+			}
 
-		tree, err := parser.Parse("Any")
-		require.NoError(t, err)
+			tree, err := parser.Parse("Any")
+			require.NoError(t, err)
 
-		config := conf.New(env)
-		expr.AsKind(reflect.String)(config)
+			config := conf.New(env)
+			expr.AsKind(reflect.String)(config)
 
-		_, err = checker.Check(tree, config)
-		require.NoError(t, err)
-	})
+			_, err = checker.Check(tree, config)
+			require.NoError(t, err)
+		},
+	)
 }
 
 func TestCheck_operator_in_works_with_interfaces(t *testing.T) {
@@ -933,24 +1028,31 @@ func TestCheck_Function_types_are_checked(t *testing.T) {
 		"add(1, 2, 3, 4)",
 	}
 	for _, test := range tests {
-		t.Run(test, func(t *testing.T) {
-			tree, err := parser.Parse(test)
+		t.Run(
+			test, func(t *testing.T) {
+				tree, err := parser.Parse(test)
+				require.NoError(t, err)
+
+				_, err = checker.Check(tree, config)
+				require.NoError(t, err)
+				require.Equal(t, reflect.Int, tree.Node.Type().Kind())
+			},
+		)
+	}
+
+	t.Run(
+		"errors", func(t *testing.T) {
+			tree, err := parser.Parse("add(1, '2')")
 			require.NoError(t, err)
 
 			_, err = checker.Check(tree, config)
-			require.NoError(t, err)
-			require.Equal(t, reflect.Int, tree.Node.Type().Kind())
-		})
-	}
-
-	t.Run("errors", func(t *testing.T) {
-		tree, err := parser.Parse("add(1, '2')")
-		require.NoError(t, err)
-
-		_, err = checker.Check(tree, config)
-		require.Error(t, err)
-		require.Equal(t, "cannot use string as argument (type int) to call add  (1:8)\n | add(1, '2')\n | .......^", err.Error())
-	})
+			require.Error(t, err)
+			require.Equal(
+				t, "cannot use string as argument (type int) to call add  (1:8)\n | add(1, '2')\n | .......^",
+				err.Error(),
+			)
+		},
+	)
 }
 
 func TestCheck_Function_without_types(t *testing.T) {
@@ -984,13 +1086,15 @@ func TestCheck_dont_panic_on_nil_arguments_for_builtins(t *testing.T) {
 		"float(nil)",
 	}
 	for _, test := range tests {
-		t.Run(test, func(t *testing.T) {
-			tree, err := parser.Parse(test)
-			require.NoError(t, err)
+		t.Run(
+			test, func(t *testing.T) {
+				tree, err := parser.Parse(test)
+				require.NoError(t, err)
 
-			_, err = checker.Check(tree, conf.New(nil))
-			require.Error(t, err)
-		})
+				_, err = checker.Check(tree, conf.New(nil))
+				require.Error(t, err)
+			},
+		)
 	}
 }
 
@@ -1010,23 +1114,27 @@ func TestCheck_do_not_override_params_for_functions(t *testing.T) {
 	)(config)
 	config.Check()
 
-	t.Run("func from env", func(t *testing.T) {
-		tree, err := parser.Parse("foo(1)")
-		require.NoError(t, err)
+	t.Run(
+		"func from env", func(t *testing.T) {
+			tree, err := parser.Parse("foo(1)")
+			require.NoError(t, err)
 
-		_, err = checker.Check(tree, config)
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "cannot use int as argument")
-	})
+			_, err = checker.Check(tree, config)
+			require.Error(t, err)
+			require.Contains(t, err.Error(), "cannot use int as argument")
+		},
+	)
 
-	t.Run("func from function", func(t *testing.T) {
-		tree, err := parser.Parse("bar(1)")
-		require.NoError(t, err)
+	t.Run(
+		"func from function", func(t *testing.T) {
+			tree, err := parser.Parse("bar(1)")
+			require.NoError(t, err)
 
-		_, err = checker.Check(tree, config)
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "cannot use int as argument")
-	})
+			_, err = checker.Check(tree, config)
+			require.Error(t, err)
+			require.Contains(t, err.Error(), "cannot use int as argument")
+		},
+	)
 }
 
 func TestCheck_env_keyword(t *testing.T) {
@@ -1046,14 +1154,16 @@ func TestCheck_env_keyword(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			tree, err := parser.Parse(test.input)
-			require.NoError(t, err)
+		t.Run(
+			test.input, func(t *testing.T) {
+				tree, err := parser.Parse(test.input)
+				require.NoError(t, err)
 
-			rtype, err := checker.Check(tree, conf.New(env))
-			require.NoError(t, err)
-			require.True(t, rtype.Kind() == test.want, fmt.Sprintf("expected %s, got %s", test.want, rtype.Kind()))
-		})
+				rtype, err := checker.Check(tree, conf.New(env))
+				require.NoError(t, err)
+				require.True(t, rtype.Kind() == test.want, fmt.Sprintf("expected %s, got %s", test.want, rtype.Kind()))
+			},
+		)
 	}
 }
 
@@ -1062,19 +1172,24 @@ func TestCheck_builtin_without_call(t *testing.T) {
 		input string
 		err   string
 	}{
-		{`len + 1`, "invalid operation: + (mismatched types func(...interface {}) (interface {}, error) and int) (1:5)\n | len + 1\n | ....^"},
+		{
+			`len + 1`,
+			"invalid operation: + (mismatched types func(...interface {}) (interface {}, error) and int) (1:5)\n | len + 1\n | ....^",
+		},
 		{`string.A`, "type func(interface {}) string has no field A (1:8)\n | string.A\n | .......^"},
 	}
 
 	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			tree, err := parser.Parse(test.input)
-			require.NoError(t, err)
+		t.Run(
+			test.input, func(t *testing.T) {
+				tree, err := parser.Parse(test.input)
+				require.NoError(t, err)
 
-			_, err = checker.Check(tree, conf.New(nil))
-			require.Error(t, err)
-			require.Equal(t, test.err, err.Error())
-		})
+				_, err = checker.Check(tree, conf.New(nil))
+				require.Error(t, err)
+				require.Equal(t, test.err, err.Error())
+			},
+		)
 	}
 }
 
@@ -1086,9 +1201,11 @@ func TestCheck_types(t *testing.T) {
 				types.Extra: types.String,
 			},
 		},
-		"arr": types.Array(types.Map{
-			"value": types.String,
-		}),
+		"arr": types.Array(
+			types.Map{
+				"value": types.String,
+			},
+		),
 		types.Extra: types.Any,
 	}
 
@@ -1106,22 +1223,27 @@ func TestCheck_types(t *testing.T) {
 		{`[foo] | map(.unknown)`, `unknown field unknown`},
 		{`[foo] | map(.bar) | filter(.baz)`, `predicate should return boolean (got string)`},
 		{`arr | filter(.value > 0)`, `invalid operation: > (mismatched types string and int)`},
-		{`arr | filter(.value contains "a") | filter(.value == 0)`, `invalid operation: == (mismatched types string and int)`},
+		{
+			`arr | filter(.value contains "a") | filter(.value == 0)`,
+			`invalid operation: == (mismatched types string and int)`,
+		},
 	}
 
 	for _, test := range tests {
-		t.Run(test.code, func(t *testing.T) {
-			tree, err := parser.Parse(test.code)
-			require.NoError(t, err)
-
-			config := conf.New(env)
-			_, err = checker.Check(tree, config)
-			if test.err == noerr {
+		t.Run(
+			test.code, func(t *testing.T) {
+				tree, err := parser.Parse(test.code)
 				require.NoError(t, err)
-			} else {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), test.err)
-			}
-		})
+
+				config := conf.New(env)
+				_, err = checker.Check(tree, config)
+				if test.err == noerr {
+					require.NoError(t, err)
+				} else {
+					require.Error(t, err)
+					require.Contains(t, err.Error(), test.err)
+				}
+			},
+		)
 	}
 }

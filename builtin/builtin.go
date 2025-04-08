@@ -194,6 +194,24 @@ var Builtins = []*Function{
 		},
 	},
 	{
+		Name: "decimal",
+		Fast: Decimal,
+		Validate: func(args []reflect.Type) (reflect.Type, error) {
+			if len(args) != 1 {
+				return anyType, fmt.Errorf("invalid number of arguments (expected 1, got %d)", len(args))
+			}
+			switch kind(args[0]) {
+			case reflect.Interface:
+				return decimalType, nil
+			case reflect.Float32, reflect.Float64, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				return decimalType, nil
+			case reflect.String:
+				return decimalType, nil
+			}
+			return anyType, fmt.Errorf("invalid argument for decimal (type %s)", args[0])
+		},
+	},
+	{
 		Name:  "string",
 		Fast:  String,
 		Types: types(new(func(any any) string)),
@@ -280,7 +298,9 @@ var Builtins = []*Function{
 			} else if len(args) == 3 {
 				return strings.SplitAfterN(args[0].(string), args[1].(string), runtime.ToInt(args[2])), nil
 			} else {
-				return nil, fmt.Errorf("invalid number of arguments for splitAfter (expected 2 or 3, got %d)", len(args))
+				return nil, fmt.Errorf(
+					"invalid number of arguments for splitAfter (expected 2 or 3, got %d)", len(args),
+				)
 			}
 		},
 		Types: types(
@@ -292,7 +312,9 @@ var Builtins = []*Function{
 		Name: "replace",
 		Func: func(args ...any) (any, error) {
 			if len(args) == 4 {
-				return strings.Replace(args[0].(string), args[1].(string), args[2].(string), runtime.ToInt(args[3])), nil
+				return strings.Replace(
+					args[0].(string), args[1].(string), args[2].(string), runtime.ToInt(args[3]),
+				), nil
 			} else if len(args) == 3 {
 				return strings.ReplaceAll(args[0].(string), args[1].(string), args[2].(string)), nil
 			} else {
@@ -1022,36 +1044,50 @@ var Builtins = []*Function{
 			new(func([]int) []any),
 		),
 	},
-	bitFunc("bitand", func(x, y int) (any, error) {
-		return x & y, nil
-	}),
-	bitFunc("bitor", func(x, y int) (any, error) {
-		return x | y, nil
-	}),
-	bitFunc("bitxor", func(x, y int) (any, error) {
-		return x ^ y, nil
-	}),
-	bitFunc("bitnand", func(x, y int) (any, error) {
-		return x &^ y, nil
-	}),
-	bitFunc("bitshl", func(x, y int) (any, error) {
-		if y < 0 {
-			return nil, fmt.Errorf("invalid operation: negative shift count %d (type int)", y)
-		}
-		return x << y, nil
-	}),
-	bitFunc("bitshr", func(x, y int) (any, error) {
-		if y < 0 {
-			return nil, fmt.Errorf("invalid operation: negative shift count %d (type int)", y)
-		}
-		return x >> y, nil
-	}),
-	bitFunc("bitushr", func(x, y int) (any, error) {
-		if y < 0 {
-			return nil, fmt.Errorf("invalid operation: negative shift count %d (type int)", y)
-		}
-		return int(uint(x) >> y), nil
-	}),
+	bitFunc(
+		"bitand", func(x, y int) (any, error) {
+			return x & y, nil
+		},
+	),
+	bitFunc(
+		"bitor", func(x, y int) (any, error) {
+			return x | y, nil
+		},
+	),
+	bitFunc(
+		"bitxor", func(x, y int) (any, error) {
+			return x ^ y, nil
+		},
+	),
+	bitFunc(
+		"bitnand", func(x, y int) (any, error) {
+			return x &^ y, nil
+		},
+	),
+	bitFunc(
+		"bitshl", func(x, y int) (any, error) {
+			if y < 0 {
+				return nil, fmt.Errorf("invalid operation: negative shift count %d (type int)", y)
+			}
+			return x << y, nil
+		},
+	),
+	bitFunc(
+		"bitshr", func(x, y int) (any, error) {
+			if y < 0 {
+				return nil, fmt.Errorf("invalid operation: negative shift count %d (type int)", y)
+			}
+			return x >> y, nil
+		},
+	),
+	bitFunc(
+		"bitushr", func(x, y int) (any, error) {
+			if y < 0 {
+				return nil, fmt.Errorf("invalid operation: negative shift count %d (type int)", y)
+			}
+			return int(uint(x) >> y), nil
+		},
+	),
 	{
 		Name: "bitnot",
 		Func: func(args ...any) (any, error) {

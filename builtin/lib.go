@@ -2,6 +2,7 @@ package builtin
 
 import (
 	"fmt"
+	"github.com/shopspring/decimal"
 	"math"
 	"reflect"
 	"strconv"
@@ -249,6 +250,43 @@ func Float(x any) any {
 	}
 }
 
+func Decimal(x any) any {
+	switch x := x.(type) {
+	case float32:
+		return decimal.NewFromFloat32(x)
+	case float64:
+		return decimal.NewFromFloat(x)
+	case int:
+		return decimal.NewFromInt(int64(x))
+	case int8:
+		return decimal.NewFromInt32(int32(x))
+	case int16:
+		return decimal.NewFromInt32(int32(x))
+	case int32:
+		return decimal.NewFromInt32(x)
+	case int64:
+		return decimal.NewFromInt(x)
+	case uint:
+		return decimal.NewFromUint64(uint64(x))
+	case uint8:
+		return decimal.NewFromUint64(uint64(x))
+	case uint16:
+		return decimal.NewFromUint64(uint64(x))
+	case uint32:
+		return decimal.NewFromUint64(uint64(x))
+	case uint64:
+		return decimal.NewFromUint64(uint64(x))
+	case string:
+		decVal, err := decimal.NewFromString(x)
+		if err != nil {
+			panic(fmt.Sprintf("invalid operation: decimal(%s)", x))
+		}
+		return decVal
+	default:
+		panic(fmt.Sprintf("invalid operation: decimal(%T)", x))
+	}
+}
+
 func String(arg any) any {
 	return fmt.Sprintf("%v", arg)
 }
@@ -415,13 +453,15 @@ func get(params ...any) (out any, err error) {
 
 	case reflect.Struct:
 		fieldName := i.(string)
-		value := v.FieldByNameFunc(func(name string) bool {
-			field, _ := v.Type().FieldByName(name)
-			if field.Tag.Get("expr") == fieldName {
-				return true
-			}
-			return name == fieldName
-		})
+		value := v.FieldByNameFunc(
+			func(name string) bool {
+				field, _ := v.Type().FieldByName(name)
+				if field.Tag.Get("expr") == fieldName {
+					return true
+				}
+				return name == fieldName
+			},
+		)
 		if value.IsValid() {
 			return value.Interface(), nil
 		}

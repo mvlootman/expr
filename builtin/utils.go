@@ -2,6 +2,7 @@ package builtin
 
 import (
 	"fmt"
+	"github.com/shopspring/decimal"
 	"reflect"
 	"time"
 
@@ -12,6 +13,7 @@ var (
 	anyType      = reflect.TypeOf(new(any)).Elem()
 	integerType  = reflect.TypeOf(0)
 	floatType    = reflect.TypeOf(float64(0))
+	decimalType  = reflect.TypeOf(decimal.Decimal{})
 	arrayType    = reflect.TypeOf([]any{})
 	mapType      = reflect.TypeOf(map[any]any{})
 	timeType     = reflect.TypeOf(new(time.Time)).Elem()

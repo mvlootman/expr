@@ -1,6 +1,7 @@
 package checker
 
 import (
+	"github.com/shopspring/decimal"
 	"reflect"
 	"time"
 
@@ -13,6 +14,7 @@ var (
 	boolNature     = Nature{Type: reflect.TypeOf(true)}
 	integerNature  = Nature{Type: reflect.TypeOf(0)}
 	floatNature    = Nature{Type: reflect.TypeOf(float64(0))}
+	decimalNature  = Nature{Type: reflect.TypeOf(decimal.Decimal{})}
 	stringNature   = Nature{Type: reflect.TypeOf("")}
 	arrayNature    = Nature{Type: reflect.TypeOf([]any{})}
 	mapNature      = Nature{Type: reflect.TypeOf(map[string]any{})}
@@ -92,8 +94,19 @@ func isFloat(nt Nature) bool {
 	return false
 }
 
+func isDecimal(nt Nature) bool {
+	// TODO can we see the difference between decimal and float?
+	// panic("types: isDecimal called!")
+	switch nt.Kind() {
+	case reflect.Struct:
+		return nt.PkgPath() == "github.com/shopspring/decimal"
+	}
+	return false
+}
+
 func isNumber(nt Nature) bool {
-	return isInteger(nt) || isFloat(nt)
+	// if it is not an integer first check for decimal, lastly check for float
+	return isInteger(nt) || isDecimal(nt) || isFloat(nt)
 }
 
 func isTime(nt Nature) bool {

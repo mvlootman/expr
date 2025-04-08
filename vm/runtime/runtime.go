@@ -4,6 +4,7 @@ package runtime
 
 import (
 	"fmt"
+	"github.com/shopspring/decimal"
 	"math"
 	"reflect"
 
@@ -63,13 +64,15 @@ func Fetch(from, i any) any {
 
 	case reflect.Struct:
 		fieldName := i.(string)
-		value := v.FieldByNameFunc(func(name string) bool {
-			field, _ := v.Type().FieldByName(name)
-			if field.Tag.Get("expr") == fieldName {
-				return true
-			}
-			return name == fieldName
-		})
+		value := v.FieldByNameFunc(
+			func(name string) bool {
+				field, _ := v.Type().FieldByName(name)
+				if field.Tag.Get("expr") == fieldName {
+					return true
+				}
+				return name == fieldName
+			},
+		)
 		if value.IsValid() {
 			return value.Interface()
 		}
@@ -246,6 +249,8 @@ func Negate(i any) any {
 		return -v
 	case float64:
 		return -v
+	case decimal.Decimal:
+		return v.Neg()
 	case int:
 		return -v
 	case int8:
@@ -293,6 +298,8 @@ func ToInt(a any) int {
 		return int(x)
 	case float64:
 		return int(x)
+	case decimal.Decimal:
+		return int(x.IntPart())
 	case int:
 		return x
 	case int8:
@@ -324,6 +331,8 @@ func ToInt64(a any) int64 {
 		return int64(x)
 	case float64:
 		return int64(x)
+	case decimal.Decimal:
+		return x.IntPart()
 	case int:
 		return int64(x)
 	case int8:
@@ -355,6 +364,8 @@ func ToFloat64(a any) float64 {
 		return float64(x)
 	case float64:
 		return x
+	case decimal.Decimal:
+		return x.InexactFloat64()
 	case int:
 		return float64(x)
 	case int8:

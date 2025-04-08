@@ -152,6 +152,8 @@ func (v *checker) visit(node ast.Node) Nature {
 		nt = v.IntegerNode(n)
 	case *ast.FloatNode:
 		nt = v.FloatNode(n)
+	case *ast.DecimalNode:
+		nt = v.DecimalNode(n)
 	case *ast.BoolNode:
 		nt = v.BoolNode(n)
 	case *ast.StringNode:
@@ -245,6 +247,10 @@ func (v *checker) IntegerNode(*ast.IntegerNode) Nature {
 
 func (v *checker) FloatNode(*ast.FloatNode) Nature {
 	return floatNature
+}
+
+func (v *checker) DecimalNode(*ast.DecimalNode) Nature {
+	return decimalNature
 }
 
 func (v *checker) BoolNode(*ast.BoolNode) Nature {
