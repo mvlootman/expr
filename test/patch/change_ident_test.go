@@ -3,12 +3,12 @@ package patch_test
 import (
 	"testing"
 
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/ast"
-	"github.com/expr-lang/expr/vm"
-	"github.com/expr-lang/expr/vm/runtime"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/ast"
+	"github.com/mvlootman/expr/vm"
+	"github.com/mvlootman/expr/vm/runtime"
 )
 
 func TestPatch_change_ident(t *testing.T) {

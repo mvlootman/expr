@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/internal/testify/require"
 )
 
 type X struct{}

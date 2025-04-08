@@ -17,9 +17,9 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/expr-lang/expr/internal/spew"
+	"github.com/mvlootman/expr/internal/spew"
 
-	"github.com/expr-lang/expr/internal/difflib"
+	"github.com/mvlootman/expr/internal/difflib"
 )
 
 //go:generate sh -c "cd ../_codegen && go build && cd - && ../_codegen/_codegen -output-package=assert -template=assertion_format.go.tmpl"
@@ -392,7 +392,9 @@ func labeledOutput(content ...labeledContent) string {
 	}
 	var output string
 	for _, v := range content {
-		output += "\t" + v.label + ":" + strings.Repeat(" ", longestLabel-len(v.label)) + "\t" + indentMessageLines(v.content, longestLabel) + "\n"
+		output += "\t" + v.label + ":" + strings.Repeat(
+			" ", longestLabel-len(v.label),
+		) + "\t" + indentMessageLines(v.content, longestLabel) + "\n"
 	}
 	return output
 }
@@ -442,7 +444,11 @@ func IsType(t TestingT, expectedType interface{}, object interface{}, msgAndArgs
 	}
 
 	if !ObjectsAreEqual(reflect.TypeOf(object), reflect.TypeOf(expectedType)) {
-		return Fail(t, fmt.Sprintf("Object expected to be of type %v, but was %v", reflect.TypeOf(expectedType), reflect.TypeOf(object)), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"Object expected to be of type %v, but was %v", reflect.TypeOf(expectedType), reflect.TypeOf(object),
+			), msgAndArgs...,
+		)
 	}
 
 	return true
@@ -460,16 +466,24 @@ func Equal(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) 
 		h.Helper()
 	}
 	if err := validateEqualArgs(expected, actual); err != nil {
-		return Fail(t, fmt.Sprintf("Invalid operation: %#v == %#v (%s)",
-			expected, actual, err), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"Invalid operation: %#v == %#v (%s)",
+				expected, actual, err,
+			), msgAndArgs...,
+		)
 	}
 
 	if !ObjectsAreEqual(expected, actual) {
 		diff := diff(expected, actual)
 		expected, actual = formatUnequalValues(expected, actual)
-		return Fail(t, fmt.Sprintf("Not equal: \n"+
-			"expected: %s\n"+
-			"actual  : %s%s", expected, actual, diff), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"Not equal: \n"+
+					"expected: %s\n"+
+					"actual  : %s%s", expected, actual, diff,
+			), msgAndArgs...,
+		)
 	}
 
 	return true
@@ -501,9 +515,13 @@ func Same(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) b
 	}
 
 	if !samePointers(expected, actual) {
-		return Fail(t, fmt.Sprintf("Not same: \n"+
-			"expected: %p %#v\n"+
-			"actual  : %p %#v", expected, expected, actual, actual), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"Not same: \n"+
+					"expected: %p %#v\n"+
+					"actual  : %p %#v", expected, expected, actual, actual,
+			), msgAndArgs...,
+		)
 	}
 
 	return true
@@ -521,9 +539,12 @@ func NotSame(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}
 	}
 
 	if samePointers(expected, actual) {
-		return Fail(t, fmt.Sprintf(
-			"Expected and actual point to the same object: %p %#v",
-			expected, expected), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"Expected and actual point to the same object: %p %#v",
+				expected, expected,
+			), msgAndArgs...,
+		)
 	}
 	return true
 }
@@ -588,9 +609,13 @@ func EqualValues(t TestingT, expected, actual interface{}, msgAndArgs ...interfa
 	if !ObjectsAreEqualValues(expected, actual) {
 		diff := diff(expected, actual)
 		expected, actual = formatUnequalValues(expected, actual)
-		return Fail(t, fmt.Sprintf("Not equal: \n"+
-			"expected: %s\n"+
-			"actual  : %s%s", expected, actual, diff), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"Not equal: \n"+
+					"expected: %s\n"+
+					"actual  : %s%s", expected, actual, diff,
+			), msgAndArgs...,
+		)
 	}
 
 	return true
@@ -627,11 +652,19 @@ func EqualExportedValues(t TestingT, expected, actual interface{}, msgAndArgs ..
 	}
 
 	if aType.Kind() != reflect.Struct {
-		return Fail(t, fmt.Sprintf("Types expected to both be struct or pointer to struct \n\t%v != %v", aType.Kind(), reflect.Struct), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"Types expected to both be struct or pointer to struct \n\t%v != %v", aType.Kind(), reflect.Struct,
+			), msgAndArgs...,
+		)
 	}
 
 	if bType.Kind() != reflect.Struct {
-		return Fail(t, fmt.Sprintf("Types expected to both be struct or pointer to struct \n\t%v != %v", bType.Kind(), reflect.Struct), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"Types expected to both be struct or pointer to struct \n\t%v != %v", bType.Kind(), reflect.Struct,
+			), msgAndArgs...,
+		)
 	}
 
 	expected = copyExportedFields(expected)
@@ -640,9 +673,13 @@ func EqualExportedValues(t TestingT, expected, actual interface{}, msgAndArgs ..
 	if !ObjectsAreEqualValues(expected, actual) {
 		diff := diff(expected, actual)
 		expected, actual = formatUnequalValues(expected, actual)
-		return Fail(t, fmt.Sprintf("Not equal (comparing only exported fields): \n"+
-			"expected: %s\n"+
-			"actual  : %s%s", expected, actual, diff), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"Not equal (comparing only exported fields): \n"+
+					"expected: %s\n"+
+					"actual  : %s%s", expected, actual, diff,
+			), msgAndArgs...,
+		)
 	}
 
 	return true
@@ -847,8 +884,12 @@ func NotEqual(t TestingT, expected, actual interface{}, msgAndArgs ...interface{
 		h.Helper()
 	}
 	if err := validateEqualArgs(expected, actual); err != nil {
-		return Fail(t, fmt.Sprintf("Invalid operation: %#v != %#v (%s)",
-			expected, actual, err), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"Invalid operation: %#v != %#v (%s)",
+				expected, actual, err,
+			), msgAndArgs...,
+		)
 	}
 
 	if ObjectsAreEqual(expected, actual) {
@@ -1108,8 +1149,10 @@ func ElementsMatch(t TestingT, listA, listB interface{}, msgAndArgs ...interface
 func isList(t TestingT, list interface{}, msgAndArgs ...interface{}) (ok bool) {
 	kind := reflect.TypeOf(list).Kind()
 	if kind != reflect.Array && kind != reflect.Slice {
-		return Fail(t, fmt.Sprintf("%q has an unsupported type %s, expecting array or slice", list, kind),
-			msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf("%q has an unsupported type %s, expecting array or slice", list, kind),
+			msgAndArgs...,
+		)
 	}
 	return true
 }
@@ -1237,7 +1280,12 @@ func PanicsWithValue(t TestingT, expected interface{}, f PanicTestFunc, msgAndAr
 		return Fail(t, fmt.Sprintf("func %#v should panic\n\tPanic value:\t%#v", f, panicValue), msgAndArgs...)
 	}
 	if panicValue != expected {
-		return Fail(t, fmt.Sprintf("func %#v should panic with value:\t%#v\n\tPanic value:\t%#v\n\tPanic stack:\t%s", f, expected, panicValue, panickedStack), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"func %#v should panic with value:\t%#v\n\tPanic value:\t%#v\n\tPanic stack:\t%s", f, expected,
+				panicValue, panickedStack,
+			), msgAndArgs...,
+		)
 	}
 
 	return true
@@ -1259,7 +1307,12 @@ func PanicsWithError(t TestingT, errString string, f PanicTestFunc, msgAndArgs .
 	}
 	panicErr, ok := panicValue.(error)
 	if !ok || panicErr.Error() != errString {
-		return Fail(t, fmt.Sprintf("func %#v should panic with error message:\t%#v\n\tPanic value:\t%#v\n\tPanic stack:\t%s", f, errString, panicValue, panickedStack), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"func %#v should panic with error message:\t%#v\n\tPanic value:\t%#v\n\tPanic stack:\t%s", f, errString,
+				panicValue, panickedStack,
+			), msgAndArgs...,
+		)
 	}
 
 	return true
@@ -1274,7 +1327,11 @@ func NotPanics(t TestingT, f PanicTestFunc, msgAndArgs ...interface{}) bool {
 	}
 
 	if funcDidPanic, panicValue, panickedStack := didPanic(f); funcDidPanic {
-		return Fail(t, fmt.Sprintf("func %#v should not panic\n\tPanic value:\t%v\n\tPanic stack:\t%s", f, panicValue, panickedStack), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"func %#v should not panic\n\tPanic value:\t%v\n\tPanic stack:\t%s", f, panicValue, panickedStack,
+			), msgAndArgs...,
+		)
 	}
 
 	return true
@@ -1290,7 +1347,11 @@ func WithinDuration(t TestingT, expected, actual time.Time, delta time.Duration,
 
 	dt := expected.Sub(actual)
 	if dt < -delta || dt > delta {
-		return Fail(t, fmt.Sprintf("Max difference between %v and %v allowed is %v, but difference was %v", expected, actual, delta, dt), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"Max difference between %v and %v allowed is %v, but difference was %v", expected, actual, delta, dt,
+			), msgAndArgs...,
+		)
 	}
 
 	return true
@@ -1309,9 +1370,16 @@ func WithinRange(t TestingT, actual, start, end time.Time, msgAndArgs ...interfa
 	}
 
 	if actual.Before(start) {
-		return Fail(t, fmt.Sprintf("Time %v expected to be in time range %v to %v, but is before the range", actual, start, end), msgAndArgs...)
+		return Fail(
+			t,
+			fmt.Sprintf("Time %v expected to be in time range %v to %v, but is before the range", actual, start, end),
+			msgAndArgs...,
+		)
 	} else if actual.After(end) {
-		return Fail(t, fmt.Sprintf("Time %v expected to be in time range %v to %v, but is after the range", actual, start, end), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf("Time %v expected to be in time range %v to %v, but is after the range", actual, start, end),
+			msgAndArgs...,
+		)
 	}
 
 	return true
@@ -1384,7 +1452,11 @@ func InDelta(t TestingT, expected, actual interface{}, delta float64, msgAndArgs
 
 	dt := af - bf
 	if dt < -delta || dt > delta {
-		return Fail(t, fmt.Sprintf("Max difference between %v and %v allowed is %v, but difference was %v", expected, actual, delta, dt), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"Max difference between %v and %v allowed is %v, but difference was %v", expected, actual, delta, dt,
+			), msgAndArgs...,
+		)
 	}
 
 	return true
@@ -1493,8 +1565,12 @@ func InEpsilon(t TestingT, expected, actual interface{}, epsilon float64, msgAnd
 		return Fail(t, err.Error(), msgAndArgs...)
 	}
 	if actualEpsilon > epsilon {
-		return Fail(t, fmt.Sprintf("Relative error is too high: %#v (expected)\n"+
-			"        < %#v (actual)", epsilon, actualEpsilon), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"Relative error is too high: %#v (expected)\n"+
+					"        < %#v (actual)", epsilon, actualEpsilon,
+			), msgAndArgs...,
+		)
 	}
 
 	return true
@@ -1523,7 +1599,9 @@ func InEpsilonSlice(t TestingT, expected, actual interface{}, epsilon float64, m
 	}
 
 	for i := 0; i < expectedLen; i++ {
-		if !InEpsilon(t, expectedSlice.Index(i).Interface(), actualSlice.Index(i).Interface(), epsilon, "at index %d", i) {
+		if !InEpsilon(
+			t, expectedSlice.Index(i).Interface(), actualSlice.Index(i).Interface(), epsilon, "at index %d", i,
+		) {
 			return false
 		}
 	}
@@ -1585,9 +1663,13 @@ func EqualError(t TestingT, theError error, errString string, msgAndArgs ...inte
 	actual := theError.Error()
 	// don't need to use deep equals here, we know they are both strings
 	if expected != actual {
-		return Fail(t, fmt.Sprintf("Error message not equal:\n"+
-			"expected: %q\n"+
-			"actual  : %q", expected, actual), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf(
+				"Error message not equal:\n"+
+					"expected: %q\n"+
+					"actual  : %q", expected, actual,
+			), msgAndArgs...,
+		)
 	}
 	return true
 }
@@ -1768,11 +1850,17 @@ func JSONEq(t TestingT, expected string, actual string, msgAndArgs ...interface{
 	var expectedJSONAsInterface, actualJSONAsInterface interface{}
 
 	if err := json.Unmarshal([]byte(expected), &expectedJSONAsInterface); err != nil {
-		return Fail(t, fmt.Sprintf("Expected value ('%s') is not valid json.\nJSON parsing error: '%s'", expected, err.Error()), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf("Expected value ('%s') is not valid json.\nJSON parsing error: '%s'", expected, err.Error()),
+			msgAndArgs...,
+		)
 	}
 
 	if err := json.Unmarshal([]byte(actual), &actualJSONAsInterface); err != nil {
-		return Fail(t, fmt.Sprintf("Input ('%s') needs to be valid json.\nJSON parsing error: '%s'", actual, err.Error()), msgAndArgs...)
+		return Fail(
+			t, fmt.Sprintf("Input ('%s') needs to be valid json.\nJSON parsing error: '%s'", actual, err.Error()),
+			msgAndArgs...,
+		)
 	}
 
 	return Equal(t, expectedJSONAsInterface, actualJSONAsInterface, msgAndArgs...)
@@ -1821,15 +1909,17 @@ func diff(expected interface{}, actual interface{}) string {
 		a = spewConfig.Sdump(actual)
 	}
 
-	diff, _ := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{
-		A:        difflib.SplitLines(e),
-		B:        difflib.SplitLines(a),
-		FromFile: "Expected",
-		FromDate: "",
-		ToFile:   "Actual",
-		ToDate:   "",
-		Context:  1,
-	})
+	diff, _ := difflib.GetUnifiedDiffString(
+		difflib.UnifiedDiff{
+			A:        difflib.SplitLines(e),
+			B:        difflib.SplitLines(a),
+			FromFile: "Expected",
+			FromDate: "",
+			ToFile:   "Actual",
+			ToDate:   "",
+			Context:  1,
+		},
+	)
 
 	return "\n\nDiff:\n" + diff
 }
@@ -1866,7 +1956,9 @@ type tHelper = interface {
 // periodically checking target function each tick.
 //
 //	assert.Eventually(t, func() bool { return true; }, time.Second, 10*time.Millisecond)
-func Eventually(t TestingT, condition func() bool, waitFor time.Duration, tick time.Duration, msgAndArgs ...interface{}) bool {
+func Eventually(
+	t TestingT, condition func() bool, waitFor time.Duration, tick time.Duration, msgAndArgs ...interface{},
+) bool {
 	if h, ok := t.(tHelper); ok {
 		h.Helper()
 	}
@@ -1938,7 +2030,9 @@ func (*CollectT) Copy(TestingT) {
 //		// add assertions as needed; any assertion failure will fail the current tick
 //		assert.True(c, externalValue, "expected 'externalValue' to be true")
 //	}, 10*time.Second, 1*time.Second, "external state has not changed to 'true'; still false")
-func EventuallyWithT(t TestingT, condition func(collect *CollectT), waitFor time.Duration, tick time.Duration, msgAndArgs ...interface{}) bool {
+func EventuallyWithT(
+	t TestingT, condition func(collect *CollectT), waitFor time.Duration, tick time.Duration, msgAndArgs ...interface{},
+) bool {
 	if h, ok := t.(tHelper); ok {
 		h.Helper()
 	}
@@ -1983,7 +2077,9 @@ func EventuallyWithT(t TestingT, condition func(collect *CollectT), waitFor time
 // periodically checking the target function each tick.
 //
 //	assert.Never(t, func() bool { return false; }, time.Second, 10*time.Millisecond)
-func Never(t TestingT, condition func() bool, waitFor time.Duration, tick time.Duration, msgAndArgs ...interface{}) bool {
+func Never(
+	t TestingT, condition func() bool, waitFor time.Duration, tick time.Duration, msgAndArgs ...interface{},
+) bool {
 	if h, ok := t.(tHelper); ok {
 		h.Helper()
 	}
@@ -2029,10 +2125,13 @@ func ErrorIs(t TestingT, err, target error, msgAndArgs ...interface{}) bool {
 
 	chain := buildErrorChainString(err)
 
-	return Fail(t, fmt.Sprintf("Target error should be in err chain:\n"+
-		"expected: %q\n"+
-		"in chain: %s", expectedText, chain,
-	), msgAndArgs...)
+	return Fail(
+		t, fmt.Sprintf(
+			"Target error should be in err chain:\n"+
+				"expected: %q\n"+
+				"in chain: %s", expectedText, chain,
+		), msgAndArgs...,
+	)
 }
 
 // NotErrorIs asserts that at none of the errors in err's chain matches target.
@@ -2052,10 +2151,13 @@ func NotErrorIs(t TestingT, err, target error, msgAndArgs ...interface{}) bool {
 
 	chain := buildErrorChainString(err)
 
-	return Fail(t, fmt.Sprintf("Target error should not be in err chain:\n"+
-		"found: %q\n"+
-		"in chain: %s", expectedText, chain,
-	), msgAndArgs...)
+	return Fail(
+		t, fmt.Sprintf(
+			"Target error should not be in err chain:\n"+
+				"found: %q\n"+
+				"in chain: %s", expectedText, chain,
+		), msgAndArgs...,
+	)
 }
 
 // ErrorAs asserts that at least one of the errors in err's chain matches target, and if so, sets target to that error value.
@@ -2070,10 +2172,13 @@ func ErrorAs(t TestingT, err error, target interface{}, msgAndArgs ...interface{
 
 	chain := buildErrorChainString(err)
 
-	return Fail(t, fmt.Sprintf("Should be in error chain:\n"+
-		"expected: %q\n"+
-		"in chain: %s", target, chain,
-	), msgAndArgs...)
+	return Fail(
+		t, fmt.Sprintf(
+			"Should be in error chain:\n"+
+				"expected: %q\n"+
+				"in chain: %s", target, chain,
+		), msgAndArgs...,
+	)
 }
 
 func buildErrorChainString(err error) string {

@@ -3,8 +3,8 @@ package issue_test
 import (
 	"testing"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/internal/testify/require"
 )
 
 func TestIssue461(t *testing.T) {
@@ -77,17 +77,19 @@ func TestIssue461(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
-			program, err := expr.Compile(tt.input, expr.Env(tt.env), expr.AsBool())
+		t.Run(
+			tt.input, func(t *testing.T) {
+				program, err := expr.Compile(tt.input, expr.Env(tt.env), expr.AsBool())
 
-			if tt.err != "" {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tt.err)
-			} else {
-				out, err := expr.Run(program, tt.env)
-				require.NoError(t, err)
-				require.Equal(t, tt.want, out)
-			}
-		})
+				if tt.err != "" {
+					require.Error(t, err)
+					require.Contains(t, err.Error(), tt.err)
+				} else {
+					out, err := expr.Run(program, tt.env)
+					require.NoError(t, err)
+					require.Equal(t, tt.want, out)
+				}
+			},
+		)
 	}
 }

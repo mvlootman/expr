@@ -67,7 +67,7 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/expr-lang/expr/internal/spew"
+	"github.com/mvlootman/expr/internal/spew"
 )
 
 // dumpTest is used to describe a test to be performed against the Dump method.
@@ -570,10 +570,14 @@ func addMapDumpTests() {
 		"\"two\": (" + mt2 + ") 2,\n (" + mt1 + ") (len=" + klen +
 		") \"one\": (" + mt2 + ") 1\n}"
 	addDumpTest(m, "("+mt+") "+ms+"\n", "("+mt+") "+ms2+"\n")
-	addDumpTest(pm, "(*"+mt+")("+mAddr+")("+ms+")\n",
-		"(*"+mt+")("+mAddr+")("+ms2+")\n")
-	addDumpTest(&pm, "(**"+mt+")("+pmAddr+"->"+mAddr+")("+ms+")\n",
-		"(**"+mt+")("+pmAddr+"->"+mAddr+")("+ms2+")\n")
+	addDumpTest(
+		pm, "(*"+mt+")("+mAddr+")("+ms+")\n",
+		"(*"+mt+")("+mAddr+")("+ms2+")\n",
+	)
+	addDumpTest(
+		&pm, "(**"+mt+")("+pmAddr+"->"+mAddr+")("+ms+")\n",
+		"(**"+mt+")("+pmAddr+"->"+mAddr+")("+ms2+")\n",
+	)
 	addDumpTest(nm, "(*"+mt+")(<nil>)\n")
 	addDumpTest(nilMap, "("+mt+") <nil>\n")
 

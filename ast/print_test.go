@@ -3,11 +3,11 @@ package ast_test
 import (
 	"testing"
 
-	"github.com/expr-lang/expr/internal/testify/assert"
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/assert"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr/ast"
-	"github.com/expr-lang/expr/parser"
+	"github.com/mvlootman/expr/ast"
+	"github.com/mvlootman/expr/parser"
 )
 
 func TestPrint(t *testing.T) {
@@ -87,11 +87,13 @@ func TestPrint(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
-			tree, err := parser.Parse(tt.input)
-			require.NoError(t, err)
-			assert.Equal(t, tt.want, tree.Node.String())
-		})
+		t.Run(
+			tt.input, func(t *testing.T) {
+				tree, err := parser.Parse(tt.input)
+				require.NoError(t, err)
+				assert.Equal(t, tt.want, tree.Node.String())
+			},
+		)
 	}
 }
 
@@ -122,11 +124,13 @@ func TestPrint_ConstantNode(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.want, func(t *testing.T) {
-			node := &ast.ConstantNode{
-				Value: tt.input,
-			}
-			require.Equal(t, tt.want, node.String())
-		})
+		t.Run(
+			tt.want, func(t *testing.T) {
+				node := &ast.ConstantNode{
+					Value: tt.input,
+				}
+				require.Equal(t, tt.want, node.String())
+			},
+		)
 	}
 }

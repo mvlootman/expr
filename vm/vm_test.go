@@ -8,14 +8,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/checker"
-	"github.com/expr-lang/expr/compiler"
-	"github.com/expr-lang/expr/conf"
-	"github.com/expr-lang/expr/parser"
-	"github.com/expr-lang/expr/vm"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/checker"
+	"github.com/mvlootman/expr/compiler"
+	"github.com/mvlootman/expr/conf"
+	"github.com/mvlootman/expr/parser"
+	"github.com/mvlootman/expr/vm"
 )
 
 func TestRun_NilProgram(t *testing.T) {
@@ -365,21 +365,23 @@ func TestVM_OpcodeOperations(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			program, err := expr.Compile(tt.expr, expr.Env(tt.env))
-			require.NoError(t, err)
-
-			testVM := &vm.VM{}
-			got, err := testVM.Run(program, tt.env)
-
-			if tt.expectError != "" {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tt.expectError)
-			} else {
+		t.Run(
+			tt.name, func(t *testing.T) {
+				program, err := expr.Compile(tt.expr, expr.Env(tt.env))
 				require.NoError(t, err)
-				require.Equal(t, tt.want, got)
-			}
-		})
+
+				testVM := &vm.VM{}
+				got, err := testVM.Run(program, tt.env)
+
+				if tt.expectError != "" {
+					require.Error(t, err)
+					require.Contains(t, err.Error(), tt.expectError)
+				} else {
+					require.NoError(t, err)
+					require.Equal(t, tt.want, got)
+				}
+			},
+		)
 	}
 }
 
@@ -443,21 +445,23 @@ func TestVM_GroupAndSortOperations(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			program, err := expr.Compile(tt.expr, expr.Env(tt.env))
-			require.NoError(t, err)
-
-			testVM := &vm.VM{}
-			got, err := testVM.Run(program, tt.env)
-
-			if tt.expectError != "" {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tt.expectError)
-			} else {
+		t.Run(
+			tt.name, func(t *testing.T) {
+				program, err := expr.Compile(tt.expr, expr.Env(tt.env))
 				require.NoError(t, err)
-				require.Equal(t, tt.want, got)
-			}
-		})
+
+				testVM := &vm.VM{}
+				got, err := testVM.Run(program, tt.env)
+
+				if tt.expectError != "" {
+					require.Error(t, err)
+					require.Contains(t, err.Error(), tt.expectError)
+				} else {
+					require.NoError(t, err)
+					require.Equal(t, tt.want, got)
+				}
+			},
+		)
 	}
 }
 
@@ -508,15 +512,17 @@ func TestVM_IndexOperations(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			program, err := expr.Compile(tt.expr)
-			require.NoError(t, err)
+		t.Run(
+			tt.name, func(t *testing.T) {
+				program, err := expr.Compile(tt.expr)
+				require.NoError(t, err)
 
-			testVM := &vm.VM{}
-			got, err := testVM.Run(program, nil)
-			require.NoError(t, err)
-			require.Equal(t, tt.want, got)
-		})
+				testVM := &vm.VM{}
+				got, err := testVM.Run(program, nil)
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			},
+		)
 	}
 }
 
@@ -607,28 +613,30 @@ func TestVM_DirectCallOpcodes(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			program := vm.NewProgram(
-				nil, // source
-				nil, // node
-				nil, // locations
-				0,   // variables
-				tt.consts,
-				tt.bytecode,
-				tt.args,
-				tt.funcs,
-				nil, // debugInfo
-				nil, // span
-			)
-			vm := &vm.VM{}
-			got, err := vm.Run(program, nil)
-			if tt.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tt.want, got)
-			}
-		})
+		t.Run(
+			tt.name, func(t *testing.T) {
+				program := vm.NewProgram(
+					nil, // source
+					nil, // node
+					nil, // locations
+					0,   // variables
+					tt.consts,
+					tt.bytecode,
+					tt.args,
+					tt.funcs,
+					nil, // debugInfo
+					nil, // span
+				)
+				vm := &vm.VM{}
+				got, err := vm.Run(program, nil)
+				if tt.wantErr {
+					require.Error(t, err)
+				} else {
+					require.NoError(t, err)
+					require.Equal(t, tt.want, got)
+				}
+			},
+		)
 	}
 }
 
@@ -733,28 +741,30 @@ func TestVM_IndexAndCountOperations(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			program := vm.NewProgram(
-				nil, // source
-				nil, // node
-				nil, // locations
-				0,   // variables
-				tt.consts,
-				tt.bytecode,
-				tt.args,
-				nil, // functions
-				nil, // debugInfo
-				nil, // span
-			)
-			vm := &vm.VM{}
-			got, err := vm.Run(program, nil)
-			if tt.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tt.want, got)
-			}
-		})
+		t.Run(
+			tt.name, func(t *testing.T) {
+				program := vm.NewProgram(
+					nil, // source
+					nil, // node
+					nil, // locations
+					0,   // variables
+					tt.consts,
+					tt.bytecode,
+					tt.args,
+					nil, // functions
+					nil, // debugInfo
+					nil, // span
+				)
+				vm := &vm.VM{}
+				got, err := vm.Run(program, nil)
+				if tt.wantErr {
+					require.Error(t, err)
+				} else {
+					require.NoError(t, err)
+					require.Equal(t, tt.want, got)
+				}
+			},
+		)
 	}
 }
 
@@ -1174,28 +1184,30 @@ func TestVM_DirectBasicOpcodes(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			program := vm.NewProgram(
-				nil, // source
-				nil, // node
-				nil, // locations
-				0,   // variables
-				tt.consts,
-				tt.bytecode,
-				tt.args,
-				nil, // functions
-				nil, // debugInfo
-				nil, // span
-			)
-			vm := &vm.VM{}
-			got, err := vm.Run(program, tt.env)
-			if tt.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tt.want, got)
-			}
-		})
+		t.Run(
+			tt.name, func(t *testing.T) {
+				program := vm.NewProgram(
+					nil, // source
+					nil, // node
+					nil, // locations
+					0,   // variables
+					tt.consts,
+					tt.bytecode,
+					tt.args,
+					nil, // functions
+					nil, // debugInfo
+					nil, // span
+				)
+				vm := &vm.VM{}
+				got, err := vm.Run(program, tt.env)
+				if tt.wantErr {
+					require.Error(t, err)
+				} else {
+					require.NoError(t, err)
+					require.Equal(t, tt.want, got)
+				}
+			},
+		)
 	}
 }
 
@@ -1225,24 +1237,26 @@ func TestVM_MemoryBudget(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			node, err := parser.Parse(tt.expr)
-			require.NoError(t, err)
-
-			program, err := compiler.Compile(node, nil)
-			require.NoError(t, err)
-
-			vm := vm.VM{MemoryBudget: tt.memBudget}
-			out, err := vm.Run(program, nil)
-
-			if tt.expectError != "" {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tt.expectError)
-			} else {
+		t.Run(
+			tt.name, func(t *testing.T) {
+				node, err := parser.Parse(tt.expr)
 				require.NoError(t, err)
-				require.NotNil(t, out)
-			}
-		})
+
+				program, err := compiler.Compile(node, nil)
+				require.NoError(t, err)
+
+				vm := vm.VM{MemoryBudget: tt.memBudget}
+				out, err := vm.Run(program, nil)
+
+				if tt.expectError != "" {
+					require.Error(t, err)
+					require.Contains(t, err.Error(), tt.expectError)
+				} else {
+					require.NoError(t, err)
+					require.NotNil(t, out)
+				}
+			},
+		)
 	}
 }
 
@@ -1298,35 +1312,39 @@ func TestVM_Limits(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			var options []expr.Option
-			options = append(options, expr.Env(test.env))
-			if test.maxNodes > 0 {
-				options = append(options, func(c *conf.Config) {
-					c.MaxNodes = test.maxNodes
-				})
-			}
-
-			program, err := expr.Compile(test.expr, options...)
-			if err != nil {
-				if test.expectError != "" && strings.Contains(err.Error(), test.expectError) {
-					return
+		t.Run(
+			test.name, func(t *testing.T) {
+				var options []expr.Option
+				options = append(options, expr.Env(test.env))
+				if test.maxNodes > 0 {
+					options = append(
+						options, func(c *conf.Config) {
+							c.MaxNodes = test.maxNodes
+						},
+					)
 				}
-				t.Fatal(err)
-			}
 
-			testVM := &vm.VM{
-				MemoryBudget: test.memoryBudget,
-			}
+				program, err := expr.Compile(test.expr, options...)
+				if err != nil {
+					if test.expectError != "" && strings.Contains(err.Error(), test.expectError) {
+						return
+					}
+					t.Fatal(err)
+				}
 
-			_, err = testVM.Run(program, test.env)
+				testVM := &vm.VM{
+					MemoryBudget: test.memoryBudget,
+				}
 
-			if test.expectError == "" {
-				require.NoError(t, err)
-			} else {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), test.expectError)
-			}
-		})
+				_, err = testVM.Run(program, test.env)
+
+				if test.expectError == "" {
+					require.NoError(t, err)
+				} else {
+					require.Error(t, err)
+					require.Contains(t, err.Error(), test.expectError)
+				}
+			},
+		)
 	}
 }

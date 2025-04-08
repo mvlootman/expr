@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/expr-lang/expr/internal/deref"
+	"github.com/mvlootman/expr/internal/deref"
 )
 
 var (

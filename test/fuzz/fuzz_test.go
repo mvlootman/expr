@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/expr-lang/expr"
+	"github.com/mvlootman/expr"
 )
 
 //go:embed fuzz_corpus.txt
@@ -59,25 +59,27 @@ func FuzzExpr(f *testing.F) {
 	env := NewEnv()
 	fn := Func()
 
-	f.Fuzz(func(t *testing.T, code string) {
-		if len(code) > 1000 {
-			t.Skip("too long code")
-		}
-
-		program, err := expr.Compile(code, expr.Env(env), fn)
-		if err != nil {
-			t.Skipf("compile error: %s", err)
-		}
-
-		_, err = expr.Run(program, env)
-		if err != nil {
-			for _, r := range skip {
-				if r.MatchString(err.Error()) {
-					t.Skipf("skip error: %s", err)
-					return
-				}
+	f.Fuzz(
+		func(t *testing.T, code string) {
+			if len(code) > 1000 {
+				t.Skip("too long code")
 			}
-			t.Errorf("%s", err)
-		}
-	})
+
+			program, err := expr.Compile(code, expr.Env(env), fn)
+			if err != nil {
+				t.Skipf("compile error: %s", err)
+			}
+
+			_, err = expr.Run(program, env)
+			if err != nil {
+				for _, r := range skip {
+					if r.MatchString(err.Error()) {
+						t.Skipf("skip error: %s", err)
+						return
+					}
+				}
+				t.Errorf("%s", err)
+			}
+		},
+	)
 }

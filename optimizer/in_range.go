@@ -3,7 +3,7 @@ package optimizer
 import (
 	"reflect"
 
-	. "github.com/expr-lang/expr/ast"
+	. "github.com/mvlootman/expr/ast"
 )
 
 type inRange struct{}
@@ -22,19 +22,21 @@ func (*inRange) Visit(node *Node) {
 			if rangeOp, ok := n.Right.(*BinaryNode); ok && rangeOp.Operator == ".." {
 				if from, ok := rangeOp.Left.(*IntegerNode); ok {
 					if to, ok := rangeOp.Right.(*IntegerNode); ok {
-						patchCopyType(node, &BinaryNode{
-							Operator: "and",
-							Left: &BinaryNode{
-								Operator: ">=",
-								Left:     n.Left,
-								Right:    from,
+						patchCopyType(
+							node, &BinaryNode{
+								Operator: "and",
+								Left: &BinaryNode{
+									Operator: ">=",
+									Left:     n.Left,
+									Right:    from,
+								},
+								Right: &BinaryNode{
+									Operator: "<=",
+									Left:     n.Left,
+									Right:    to,
+								},
 							},
-							Right: &BinaryNode{
-								Operator: "<=",
-								Left:     n.Left,
-								Right:    to,
-							},
-						})
+						)
 					}
 				}
 			}

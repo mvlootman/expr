@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/expr-lang/expr/internal/testify/assert"
+	"github.com/mvlootman/expr/internal/testify/assert"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/test/coredns"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/test/coredns"
 )
 
 func TestCoreDNS(t *testing.T) {
@@ -25,9 +25,11 @@ func TestCoreDNS(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			_, err := expr.Compile(test.input, expr.Env(env), expr.DisableBuiltin("type"))
-			assert.NoError(t, err)
-		})
+		t.Run(
+			test.input, func(t *testing.T) {
+				_, err := expr.Compile(test.input, expr.Env(env), expr.DisableBuiltin("type"))
+				assert.NoError(t, err)
+			},
+		)
 	}
 }

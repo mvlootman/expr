@@ -5,12 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/expr-lang/expr/conf"
-	"github.com/expr-lang/expr/internal/testify/assert"
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/conf"
+	"github.com/mvlootman/expr/internal/testify/assert"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	. "github.com/expr-lang/expr/ast"
-	"github.com/expr-lang/expr/parser"
+	. "github.com/mvlootman/expr/ast"
+	"github.com/mvlootman/expr/parser"
 )
 
 func TestParse(t *testing.T) {
@@ -28,8 +28,10 @@ func TestParse(t *testing.T) {
 		},
 		{
 			"`hello\nworld`",
-			&StringNode{Value: `hello
-world`},
+			&StringNode{
+				Value: `hello
+world`,
+			},
 		},
 		{
 			"3",
@@ -89,8 +91,10 @@ world`},
 		},
 		{
 			"-3",
-			&UnaryNode{Operator: "-",
-				Node: &IntegerNode{Value: 3}},
+			&UnaryNode{
+				Operator: "-",
+				Node:     &IntegerNode{Value: 3},
+			},
 		},
 		{
 			"-2^2",
@@ -105,9 +109,11 @@ world`},
 		},
 		{
 			"1 - 2",
-			&BinaryNode{Operator: "-",
-				Left:  &IntegerNode{Value: 1},
-				Right: &IntegerNode{Value: 2}},
+			&BinaryNode{
+				Operator: "-",
+				Left:     &IntegerNode{Value: 1},
+				Right:    &IntegerNode{Value: 2},
+			},
 		},
 		{
 			"(1 - 2) * 3",
@@ -123,89 +129,135 @@ world`},
 		},
 		{
 			"a or b or c",
-			&BinaryNode{Operator: "or",
-				Left: &BinaryNode{Operator: "or",
-					Left:  &IdentifierNode{Value: "a"},
-					Right: &IdentifierNode{Value: "b"}},
-				Right: &IdentifierNode{Value: "c"}},
+			&BinaryNode{
+				Operator: "or",
+				Left: &BinaryNode{
+					Operator: "or",
+					Left:     &IdentifierNode{Value: "a"},
+					Right:    &IdentifierNode{Value: "b"},
+				},
+				Right: &IdentifierNode{Value: "c"},
+			},
 		},
 		{
 			"a or b and c",
-			&BinaryNode{Operator: "or",
-				Left: &IdentifierNode{Value: "a"},
-				Right: &BinaryNode{Operator: "and",
-					Left:  &IdentifierNode{Value: "b"},
-					Right: &IdentifierNode{Value: "c"}}},
+			&BinaryNode{
+				Operator: "or",
+				Left:     &IdentifierNode{Value: "a"},
+				Right: &BinaryNode{
+					Operator: "and",
+					Left:     &IdentifierNode{Value: "b"},
+					Right:    &IdentifierNode{Value: "c"},
+				},
+			},
 		},
 		{
 			"(a or b) and c",
-			&BinaryNode{Operator: "and",
-				Left: &BinaryNode{Operator: "or",
-					Left:  &IdentifierNode{Value: "a"},
-					Right: &IdentifierNode{Value: "b"}},
-				Right: &IdentifierNode{Value: "c"}},
+			&BinaryNode{
+				Operator: "and",
+				Left: &BinaryNode{
+					Operator: "or",
+					Left:     &IdentifierNode{Value: "a"},
+					Right:    &IdentifierNode{Value: "b"},
+				},
+				Right: &IdentifierNode{Value: "c"},
+			},
 		},
 		{
 			"2**4-1",
-			&BinaryNode{Operator: "-",
-				Left: &BinaryNode{Operator: "**",
-					Left:  &IntegerNode{Value: 2},
-					Right: &IntegerNode{Value: 4}},
-				Right: &IntegerNode{Value: 1}},
+			&BinaryNode{
+				Operator: "-",
+				Left: &BinaryNode{
+					Operator: "**",
+					Left:     &IntegerNode{Value: 2},
+					Right:    &IntegerNode{Value: 4},
+				},
+				Right: &IntegerNode{Value: 1},
+			},
 		},
 		{
 			"foo(bar())",
-			&CallNode{Callee: &IdentifierNode{Value: "foo"},
-				Arguments: []Node{&CallNode{Callee: &IdentifierNode{Value: "bar"},
-					Arguments: []Node{}}}},
+			&CallNode{
+				Callee: &IdentifierNode{Value: "foo"},
+				Arguments: []Node{
+					&CallNode{
+						Callee:    &IdentifierNode{Value: "bar"},
+						Arguments: []Node{},
+					},
+				},
+			},
 		},
 		{
 			`foo("arg1", 2, true)`,
-			&CallNode{Callee: &IdentifierNode{Value: "foo"},
-				Arguments: []Node{&StringNode{Value: "arg1"},
+			&CallNode{
+				Callee: &IdentifierNode{Value: "foo"},
+				Arguments: []Node{
+					&StringNode{Value: "arg1"},
 					&IntegerNode{Value: 2},
-					&BoolNode{Value: true}}},
+					&BoolNode{Value: true},
+				},
+			},
 		},
 		{
 			"foo.bar",
-			&MemberNode{Node: &IdentifierNode{Value: "foo"},
-				Property: &StringNode{Value: "bar"}},
+			&MemberNode{
+				Node:     &IdentifierNode{Value: "foo"},
+				Property: &StringNode{Value: "bar"},
+			},
 		},
 		{
 			"foo['all']",
-			&MemberNode{Node: &IdentifierNode{Value: "foo"},
-				Property: &StringNode{Value: "all"}},
+			&MemberNode{
+				Node:     &IdentifierNode{Value: "foo"},
+				Property: &StringNode{Value: "all"},
+			},
 		},
 		{
 			"foo.bar()",
-			&CallNode{Callee: &MemberNode{Node: &IdentifierNode{Value: "foo"},
-				Property: &StringNode{Value: "bar"}, Method: true},
-				Arguments: []Node{}},
+			&CallNode{
+				Callee: &MemberNode{
+					Node:     &IdentifierNode{Value: "foo"},
+					Property: &StringNode{Value: "bar"}, Method: true,
+				},
+				Arguments: []Node{},
+			},
 		},
 		{
 			`foo.bar("arg1", 2, true)`,
-			&CallNode{Callee: &MemberNode{Node: &IdentifierNode{Value: "foo"},
-				Property: &StringNode{Value: "bar"}, Method: true},
-				Arguments: []Node{&StringNode{Value: "arg1"},
+			&CallNode{
+				Callee: &MemberNode{
+					Node:     &IdentifierNode{Value: "foo"},
+					Property: &StringNode{Value: "bar"}, Method: true,
+				},
+				Arguments: []Node{
+					&StringNode{Value: "arg1"},
 					&IntegerNode{Value: 2},
-					&BoolNode{Value: true}}},
+					&BoolNode{Value: true},
+				},
+			},
 		},
 		{
 			"foo[3]",
-			&MemberNode{Node: &IdentifierNode{Value: "foo"},
-				Property: &IntegerNode{Value: 3}},
+			&MemberNode{
+				Node:     &IdentifierNode{Value: "foo"},
+				Property: &IntegerNode{Value: 3},
+			},
 		},
 		{
 			"true ? true : false",
-			&ConditionalNode{Cond: &BoolNode{Value: true},
+			&ConditionalNode{
+				Cond: &BoolNode{Value: true},
 				Exp1: &BoolNode{Value: true},
-				Exp2: &BoolNode{}},
+				Exp2: &BoolNode{},
+			},
 		},
 		{
 			"a?[b]:c",
-			&ConditionalNode{Cond: &IdentifierNode{Value: "a"},
+			&ConditionalNode{
+				Cond: &IdentifierNode{Value: "a"},
 				Exp1: &ArrayNode{Nodes: []Node{&IdentifierNode{Value: "b"}}},
-				Exp2: &IdentifierNode{Value: "c"}},
+				Exp2: &IdentifierNode{Value: "c"},
+			},
 		},
 		{
 			"a.b().c().d[33]",
@@ -236,59 +288,106 @@ world`},
 						Value: "d",
 					},
 				},
-				Property: &IntegerNode{Value: 33}},
+				Property: &IntegerNode{Value: 33},
+			},
 		},
 		{
 			"'a' == 'b'",
-			&BinaryNode{Operator: "==",
-				Left:  &StringNode{Value: "a"},
-				Right: &StringNode{Value: "b"}},
+			&BinaryNode{
+				Operator: "==",
+				Left:     &StringNode{Value: "a"},
+				Right:    &StringNode{Value: "b"},
+			},
 		},
 		{
 			"+0 != -0",
-			&BinaryNode{Operator: "!=",
-				Left: &UnaryNode{Operator: "+",
-					Node: &IntegerNode{}},
-				Right: &UnaryNode{Operator: "-",
-					Node: &IntegerNode{}}},
+			&BinaryNode{
+				Operator: "!=",
+				Left: &UnaryNode{
+					Operator: "+",
+					Node:     &IntegerNode{},
+				},
+				Right: &UnaryNode{
+					Operator: "-",
+					Node:     &IntegerNode{},
+				},
+			},
 		},
 		{
 			"[a, b, c]",
-			&ArrayNode{Nodes: []Node{&IdentifierNode{Value: "a"},
-				&IdentifierNode{Value: "b"},
-				&IdentifierNode{Value: "c"}}},
+			&ArrayNode{
+				Nodes: []Node{
+					&IdentifierNode{Value: "a"},
+					&IdentifierNode{Value: "b"},
+					&IdentifierNode{Value: "c"},
+				},
+			},
 		},
 		{
 			"{foo:1, bar:2}",
-			&MapNode{Pairs: []Node{&PairNode{Key: &StringNode{Value: "foo"},
-				Value: &IntegerNode{Value: 1}},
-				&PairNode{Key: &StringNode{Value: "bar"},
-					Value: &IntegerNode{Value: 2}}}},
+			&MapNode{
+				Pairs: []Node{
+					&PairNode{
+						Key:   &StringNode{Value: "foo"},
+						Value: &IntegerNode{Value: 1},
+					},
+					&PairNode{
+						Key:   &StringNode{Value: "bar"},
+						Value: &IntegerNode{Value: 2},
+					},
+				},
+			},
 		},
 		{
 			"{foo:1, bar:2, }",
-			&MapNode{Pairs: []Node{&PairNode{Key: &StringNode{Value: "foo"},
-				Value: &IntegerNode{Value: 1}},
-				&PairNode{Key: &StringNode{Value: "bar"},
-					Value: &IntegerNode{Value: 2}}}},
+			&MapNode{
+				Pairs: []Node{
+					&PairNode{
+						Key:   &StringNode{Value: "foo"},
+						Value: &IntegerNode{Value: 1},
+					},
+					&PairNode{
+						Key:   &StringNode{Value: "bar"},
+						Value: &IntegerNode{Value: 2},
+					},
+				},
+			},
 		},
 		{
 			`{"a": 1, 'b': 2}`,
-			&MapNode{Pairs: []Node{&PairNode{Key: &StringNode{Value: "a"},
-				Value: &IntegerNode{Value: 1}},
-				&PairNode{Key: &StringNode{Value: "b"},
-					Value: &IntegerNode{Value: 2}}}},
+			&MapNode{
+				Pairs: []Node{
+					&PairNode{
+						Key:   &StringNode{Value: "a"},
+						Value: &IntegerNode{Value: 1},
+					},
+					&PairNode{
+						Key:   &StringNode{Value: "b"},
+						Value: &IntegerNode{Value: 2},
+					},
+				},
+			},
 		},
 		{
 			"[1].foo",
-			&MemberNode{Node: &ArrayNode{Nodes: []Node{&IntegerNode{Value: 1}}},
-				Property: &StringNode{Value: "foo"}},
+			&MemberNode{
+				Node:     &ArrayNode{Nodes: []Node{&IntegerNode{Value: 1}}},
+				Property: &StringNode{Value: "foo"},
+			},
 		},
 		{
 			"{foo:1}.bar",
-			&MemberNode{Node: &MapNode{Pairs: []Node{&PairNode{Key: &StringNode{Value: "foo"},
-				Value: &IntegerNode{Value: 1}}}},
-				Property: &StringNode{Value: "bar"}},
+			&MemberNode{
+				Node: &MapNode{
+					Pairs: []Node{
+						&PairNode{
+							Key:   &StringNode{Value: "foo"},
+							Value: &IntegerNode{Value: 1},
+						},
+					},
+				},
+				Property: &StringNode{Value: "bar"},
+			},
 		},
 		{
 			"len(foo)",
@@ -304,7 +403,8 @@ world`},
 			&BinaryNode{
 				Operator: "matches",
 				Left:     &IdentifierNode{Value: "foo"},
-				Right:    &StringNode{Value: "foo"}},
+				Right:    &StringNode{Value: "foo"},
+			},
 		},
 		{
 			`foo not matches "foo"`,
@@ -313,85 +413,115 @@ world`},
 				Node: &BinaryNode{
 					Operator: "matches",
 					Left:     &IdentifierNode{Value: "foo"},
-					Right:    &StringNode{Value: "foo"}}},
+					Right:    &StringNode{Value: "foo"},
+				},
+			},
 		},
 		{
 			`foo matches regex`,
 			&BinaryNode{
 				Operator: "matches",
 				Left:     &IdentifierNode{Value: "foo"},
-				Right:    &IdentifierNode{Value: "regex"}},
+				Right:    &IdentifierNode{Value: "regex"},
+			},
 		},
 		{
 			`foo contains "foo"`,
 			&BinaryNode{
 				Operator: "contains",
 				Left:     &IdentifierNode{Value: "foo"},
-				Right:    &StringNode{Value: "foo"}},
+				Right:    &StringNode{Value: "foo"},
+			},
 		},
 		{
 			`foo not contains "foo"`,
 			&UnaryNode{
 				Operator: "not",
-				Node: &BinaryNode{Operator: "contains",
-					Left:  &IdentifierNode{Value: "foo"},
-					Right: &StringNode{Value: "foo"}}},
+				Node: &BinaryNode{
+					Operator: "contains",
+					Left:     &IdentifierNode{Value: "foo"},
+					Right:    &StringNode{Value: "foo"},
+				},
+			},
 		},
 		{
 			`foo startsWith "foo"`,
-			&BinaryNode{Operator: "startsWith",
-				Left:  &IdentifierNode{Value: "foo"},
-				Right: &StringNode{Value: "foo"}},
+			&BinaryNode{
+				Operator: "startsWith",
+				Left:     &IdentifierNode{Value: "foo"},
+				Right:    &StringNode{Value: "foo"},
+			},
 		},
 		{
 			`foo endsWith "foo"`,
-			&BinaryNode{Operator: "endsWith",
-				Left:  &IdentifierNode{Value: "foo"},
-				Right: &StringNode{Value: "foo"}},
+			&BinaryNode{
+				Operator: "endsWith",
+				Left:     &IdentifierNode{Value: "foo"},
+				Right:    &StringNode{Value: "foo"},
+			},
 		},
 		{
 			"1..9",
-			&BinaryNode{Operator: "..",
-				Left:  &IntegerNode{Value: 1},
-				Right: &IntegerNode{Value: 9}},
+			&BinaryNode{
+				Operator: "..",
+				Left:     &IntegerNode{Value: 1},
+				Right:    &IntegerNode{Value: 9},
+			},
 		},
 		{
 			"0 in []",
-			&BinaryNode{Operator: "in",
-				Left:  &IntegerNode{},
-				Right: &ArrayNode{Nodes: []Node{}}},
+			&BinaryNode{
+				Operator: "in",
+				Left:     &IntegerNode{},
+				Right:    &ArrayNode{Nodes: []Node{}},
+			},
 		},
 		{
 			"not in_var",
-			&UnaryNode{Operator: "not",
-				Node: &IdentifierNode{Value: "in_var"}},
+			&UnaryNode{
+				Operator: "not",
+				Node:     &IdentifierNode{Value: "in_var"},
+			},
 		},
 		{
 			"-1 not in [1, 2, 3, 4]",
-			&UnaryNode{Operator: "not",
-				Node: &BinaryNode{Operator: "in",
-					Left: &UnaryNode{Operator: "-", Node: &IntegerNode{Value: 1}},
-					Right: &ArrayNode{Nodes: []Node{
-						&IntegerNode{Value: 1},
-						&IntegerNode{Value: 2},
-						&IntegerNode{Value: 3},
-						&IntegerNode{Value: 4},
-					}}}},
+			&UnaryNode{
+				Operator: "not",
+				Node: &BinaryNode{
+					Operator: "in",
+					Left:     &UnaryNode{Operator: "-", Node: &IntegerNode{Value: 1}},
+					Right: &ArrayNode{
+						Nodes: []Node{
+							&IntegerNode{Value: 1},
+							&IntegerNode{Value: 2},
+							&IntegerNode{Value: 3},
+							&IntegerNode{Value: 4},
+						},
+					},
+				},
+			},
 		},
 		{
 			"1*8 not in [1, 2, 3, 4]",
-			&UnaryNode{Operator: "not",
-				Node: &BinaryNode{Operator: "in",
-					Left: &BinaryNode{Operator: "*",
-						Left:  &IntegerNode{Value: 1},
-						Right: &IntegerNode{Value: 8},
+			&UnaryNode{
+				Operator: "not",
+				Node: &BinaryNode{
+					Operator: "in",
+					Left: &BinaryNode{
+						Operator: "*",
+						Left:     &IntegerNode{Value: 1},
+						Right:    &IntegerNode{Value: 8},
 					},
-					Right: &ArrayNode{Nodes: []Node{
-						&IntegerNode{Value: 1},
-						&IntegerNode{Value: 2},
-						&IntegerNode{Value: 3},
-						&IntegerNode{Value: 4},
-					}}}},
+					Right: &ArrayNode{
+						Nodes: []Node{
+							&IntegerNode{Value: 1},
+							&IntegerNode{Value: 2},
+							&IntegerNode{Value: 3},
+							&IntegerNode{Value: 4},
+						},
+					},
+				},
+			},
 		},
 		{
 			"2==2 ? false : 3 not in [1, 2, 5]",
@@ -407,20 +537,31 @@ world`},
 					Node: &BinaryNode{
 						Operator: "in",
 						Left:     &IntegerNode{Value: 3},
-						Right: &ArrayNode{Nodes: []Node{
-							&IntegerNode{Value: 1},
-							&IntegerNode{Value: 2},
-							&IntegerNode{Value: 5},
-						}}}}},
+						Right: &ArrayNode{
+							Nodes: []Node{
+								&IntegerNode{Value: 1},
+								&IntegerNode{Value: 2},
+								&IntegerNode{Value: 5},
+							},
+						},
+					},
+				},
+			},
 		},
 		{
 			"'foo' + 'bar' not matches 'foobar'",
-			&UnaryNode{Operator: "not",
-				Node: &BinaryNode{Operator: "matches",
-					Left: &BinaryNode{Operator: "+",
-						Left:  &StringNode{Value: "foo"},
-						Right: &StringNode{Value: "bar"}},
-					Right: &StringNode{Value: "foobar"}}},
+			&UnaryNode{
+				Operator: "not",
+				Node: &BinaryNode{
+					Operator: "matches",
+					Left: &BinaryNode{
+						Operator: "+",
+						Left:     &StringNode{Value: "foo"},
+						Right:    &StringNode{Value: "bar"},
+					},
+					Right: &StringNode{Value: "foobar"},
+				},
+			},
 		},
 		{
 			"all(Tickets, #)",
@@ -430,7 +571,9 @@ world`},
 					&IdentifierNode{Value: "Tickets"},
 					&PredicateNode{
 						Node: &PointerNode{},
-					}}},
+					},
+				},
+			},
 		},
 		{
 			"all(Tickets, {.Price > 0})",
@@ -441,9 +584,15 @@ world`},
 					&PredicateNode{
 						Node: &BinaryNode{
 							Operator: ">",
-							Left: &MemberNode{Node: &PointerNode{},
-								Property: &StringNode{Value: "Price"}},
-							Right: &IntegerNode{Value: 0}}}}},
+							Left: &MemberNode{
+								Node:     &PointerNode{},
+								Property: &StringNode{Value: "Price"},
+							},
+							Right: &IntegerNode{Value: 0},
+						},
+					},
+				},
+			},
 		},
 		{
 			"one(Tickets, {#.Price > 0})",
@@ -458,31 +607,49 @@ world`},
 								Node:     &PointerNode{},
 								Property: &StringNode{Value: "Price"},
 							},
-							Right: &IntegerNode{Value: 0}}}}},
+							Right: &IntegerNode{Value: 0},
+						},
+					},
+				},
+			},
 		},
 		{
 			"filter(Prices, {# > 100})",
-			&BuiltinNode{Name: "filter",
-				Arguments: []Node{&IdentifierNode{Value: "Prices"},
-					&PredicateNode{Node: &BinaryNode{Operator: ">",
-						Left:  &PointerNode{},
-						Right: &IntegerNode{Value: 100}}}}},
+			&BuiltinNode{
+				Name: "filter",
+				Arguments: []Node{
+					&IdentifierNode{Value: "Prices"},
+					&PredicateNode{
+						Node: &BinaryNode{
+							Operator: ">",
+							Left:     &PointerNode{},
+							Right:    &IntegerNode{Value: 100},
+						},
+					},
+				},
+			},
 		},
 		{
 			"array[1:2]",
-			&SliceNode{Node: &IdentifierNode{Value: "array"},
+			&SliceNode{
+				Node: &IdentifierNode{Value: "array"},
 				From: &IntegerNode{Value: 1},
-				To:   &IntegerNode{Value: 2}},
+				To:   &IntegerNode{Value: 2},
+			},
 		},
 		{
 			"array[:2]",
-			&SliceNode{Node: &IdentifierNode{Value: "array"},
-				To: &IntegerNode{Value: 2}},
+			&SliceNode{
+				Node: &IdentifierNode{Value: "array"},
+				To:   &IntegerNode{Value: 2},
+			},
 		},
 		{
 			"array[1:]",
-			&SliceNode{Node: &IdentifierNode{Value: "array"},
-				From: &IntegerNode{Value: 1}},
+			&SliceNode{
+				Node: &IdentifierNode{Value: "array"},
+				From: &IntegerNode{Value: 1},
+			},
 		},
 		{
 			"array[:]",
@@ -494,56 +661,80 @@ world`},
 		},
 		{
 			"foo ?? bar",
-			&BinaryNode{Operator: "??",
-				Left:  &IdentifierNode{Value: "foo"},
-				Right: &IdentifierNode{Value: "bar"}},
+			&BinaryNode{
+				Operator: "??",
+				Left:     &IdentifierNode{Value: "foo"},
+				Right:    &IdentifierNode{Value: "bar"},
+			},
 		},
 		{
 			"foo ?? bar ?? baz",
-			&BinaryNode{Operator: "??",
-				Left: &BinaryNode{Operator: "??",
-					Left:  &IdentifierNode{Value: "foo"},
-					Right: &IdentifierNode{Value: "bar"}},
-				Right: &IdentifierNode{Value: "baz"}},
+			&BinaryNode{
+				Operator: "??",
+				Left: &BinaryNode{
+					Operator: "??",
+					Left:     &IdentifierNode{Value: "foo"},
+					Right:    &IdentifierNode{Value: "bar"},
+				},
+				Right: &IdentifierNode{Value: "baz"},
+			},
 		},
 		{
 			"foo ?? (bar || baz)",
-			&BinaryNode{Operator: "??",
-				Left: &IdentifierNode{Value: "foo"},
-				Right: &BinaryNode{Operator: "||",
-					Left:  &IdentifierNode{Value: "bar"},
-					Right: &IdentifierNode{Value: "baz"}}},
+			&BinaryNode{
+				Operator: "??",
+				Left:     &IdentifierNode{Value: "foo"},
+				Right: &BinaryNode{
+					Operator: "||",
+					Left:     &IdentifierNode{Value: "bar"},
+					Right:    &IdentifierNode{Value: "baz"},
+				},
+			},
 		},
 		{
 			"foo || bar ?? baz",
-			&BinaryNode{Operator: "||",
-				Left: &IdentifierNode{Value: "foo"},
-				Right: &BinaryNode{Operator: "??",
-					Left:  &IdentifierNode{Value: "bar"},
-					Right: &IdentifierNode{Value: "baz"}}},
+			&BinaryNode{
+				Operator: "||",
+				Left:     &IdentifierNode{Value: "foo"},
+				Right: &BinaryNode{
+					Operator: "??",
+					Left:     &IdentifierNode{Value: "bar"},
+					Right:    &IdentifierNode{Value: "baz"},
+				},
+			},
 		},
 		{
 			"foo ?? bar()",
-			&BinaryNode{Operator: "??",
-				Left:  &IdentifierNode{Value: "foo"},
-				Right: &CallNode{Callee: &IdentifierNode{Value: "bar"}}},
+			&BinaryNode{
+				Operator: "??",
+				Left:     &IdentifierNode{Value: "foo"},
+				Right:    &CallNode{Callee: &IdentifierNode{Value: "bar"}},
+			},
 		},
 		{
 			"true | ok()",
 			&CallNode{
 				Callee: &IdentifierNode{Value: "ok"},
 				Arguments: []Node{
-					&BoolNode{Value: true}}}},
+					&BoolNode{Value: true},
+				},
+			},
+		},
 		{
 			`let foo = a + b; foo + c`,
 			&VariableDeclaratorNode{
 				Name: "foo",
-				Value: &BinaryNode{Operator: "+",
-					Left:  &IdentifierNode{Value: "a"},
-					Right: &IdentifierNode{Value: "b"}},
-				Expr: &BinaryNode{Operator: "+",
-					Left:  &IdentifierNode{Value: "foo"},
-					Right: &IdentifierNode{Value: "c"}}},
+				Value: &BinaryNode{
+					Operator: "+",
+					Left:     &IdentifierNode{Value: "a"},
+					Right:    &IdentifierNode{Value: "b"},
+				},
+				Expr: &BinaryNode{
+					Operator: "+",
+					Left:     &IdentifierNode{Value: "foo"},
+					Right:    &IdentifierNode{Value: "c"},
+				},
+			},
 		},
 		{
 			`map([], #index)`,
@@ -657,7 +848,8 @@ world`},
 					Right:    &IdentifierNode{Value: "b"},
 				},
 				Exp1: &BoolNode{Value: true},
-				Exp2: &IdentifierNode{Value: "x"}},
+				Exp2: &IdentifierNode{Value: "x"},
+			},
 		},
 		{
 			"1; 2; 3",
@@ -677,7 +869,8 @@ world`},
 					&SequenceNode{
 						Nodes: []Node{
 							&IntegerNode{Value: 2},
-							&IntegerNode{Value: 3}},
+							&IntegerNode{Value: 3},
+						},
 					},
 				},
 			},
@@ -689,7 +882,8 @@ world`},
 					&ConditionalNode{
 						Cond: &BoolNode{Value: true},
 						Exp1: &IntegerNode{Value: 1},
-						Exp2: &IntegerNode{Value: 2}},
+						Exp2: &IntegerNode{Value: 2},
+					},
 					&IntegerNode{Value: 3},
 					&IntegerNode{Value: 4},
 				},
@@ -716,7 +910,8 @@ world`},
 					&ConditionalNode{
 						Cond: &BoolNode{Value: true},
 						Exp1: &BoolNode{Value: true},
-						Exp2: &IntegerNode{Value: 1}},
+						Exp2: &IntegerNode{Value: 1},
+					},
 					&IntegerNode{Value: 2},
 					&IntegerNode{Value: 3},
 				},
@@ -729,8 +924,10 @@ world`},
 				Value: &ConditionalNode{
 					Cond: &BoolNode{Value: true},
 					Exp1: &IntegerNode{Value: 1},
-					Exp2: &IntegerNode{Value: 2}},
-				Expr: &IdentifierNode{Value: "x"}},
+					Exp2: &IntegerNode{Value: 2},
+				},
+				Expr: &IdentifierNode{Value: "x"},
+			},
 		},
 		{
 			"let x = true ? 1 : ( 2; 3; 4 ); x",
@@ -747,7 +944,8 @@ world`},
 						},
 					},
 				},
-				Expr: &IdentifierNode{Value: "x"}},
+				Expr: &IdentifierNode{Value: "x"},
+			},
 		},
 		{
 			"if true { 1; 2; 3 } else { 4; 5; 6 }",
@@ -757,12 +955,17 @@ world`},
 					Nodes: []Node{
 						&IntegerNode{Value: 1},
 						&IntegerNode{Value: 2},
-						&IntegerNode{Value: 3}}},
+						&IntegerNode{Value: 3},
+					},
+				},
 				Exp2: &SequenceNode{
 					Nodes: []Node{
 						&IntegerNode{Value: 4},
 						&IntegerNode{Value: 5},
-						&IntegerNode{Value: 6}}}},
+						&IntegerNode{Value: 6},
+					},
+				},
+			},
 		},
 		{
 			`all(ls, if true { 1 } else { 2 })`,
@@ -774,7 +977,11 @@ world`},
 						Node: &ConditionalNode{
 							Cond: &BoolNode{Value: true},
 							Exp1: &IntegerNode{Value: 1},
-							Exp2: &IntegerNode{Value: 2}}}}},
+							Exp2: &IntegerNode{Value: 2},
+						},
+					},
+				},
+			},
 		},
 		{
 			`let x = if true { 1 } else { 2 }; x`,
@@ -783,8 +990,10 @@ world`},
 				Value: &ConditionalNode{
 					Cond: &BoolNode{Value: true},
 					Exp1: &IntegerNode{Value: 1},
-					Exp2: &IntegerNode{Value: 2}},
-				Expr: &IdentifierNode{Value: "x"}},
+					Exp2: &IntegerNode{Value: 2},
+				},
+				Expr: &IdentifierNode{Value: "x"},
+			},
 		},
 		{
 			`call(if true { 1 } else { 2 })`,
@@ -794,7 +1003,10 @@ world`},
 					&ConditionalNode{
 						Cond: &BoolNode{Value: true},
 						Exp1: &IntegerNode{Value: 1},
-						Exp2: &IntegerNode{Value: 2}}}},
+						Exp2: &IntegerNode{Value: 2},
+					},
+				},
+			},
 		},
 		{
 			`[if true { 1 } else { 2 }]`,
@@ -803,7 +1015,10 @@ world`},
 					&ConditionalNode{
 						Cond: &BoolNode{Value: true},
 						Exp1: &IntegerNode{Value: 1},
-						Exp2: &IntegerNode{Value: 2}}}},
+						Exp2: &IntegerNode{Value: 2},
+					},
+				},
+			},
 		},
 		{
 			`map(ls, { 1; 2; 3 })`,
@@ -820,7 +1035,8 @@ world`},
 							},
 						},
 					},
-				}},
+				},
+			},
 		},
 		{
 			`let x = 1; 2; 3 + x`,
@@ -857,7 +1073,9 @@ world`},
 								Right:    &IdentifierNode{Value: "y"},
 							},
 						},
-					}}},
+					},
+				},
+			},
 		},
 		{
 			`let x = (1; 2; 3); x`,
@@ -923,11 +1141,13 @@ world`},
 		},
 	}
 	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			actual, err := parser.Parse(test.input)
-			require.NoError(t, err)
-			assert.Equal(t, Dump(test.want), Dump(actual.Node))
-		})
+		t.Run(
+			test.input, func(t *testing.T) {
+				actual, err := parser.Parse(test.input)
+				require.NoError(t, err)
+				assert.Equal(t, Dump(test.want), Dump(actual.Node))
+			},
+		)
 	}
 }
 
@@ -936,72 +1156,120 @@ func TestParse_error(t *testing.T) {
 		input string
 		err   string
 	}{
-		{`foo.`, `unexpected end of expression (1:4)
+		{
+			`foo.`, `unexpected end of expression (1:4)
  | foo.
- | ...^`},
-		{`a+`, `unexpected token EOF (1:2)
+ | ...^`,
+		},
+		{
+			`a+`, `unexpected token EOF (1:2)
  | a+
- | .^`},
-		{`a ? (1+2) c`, `unexpected token Identifier("c") (1:11)
+ | .^`,
+		},
+		{
+			`a ? (1+2) c`, `unexpected token Identifier("c") (1:11)
  | a ? (1+2) c
- | ..........^`},
-		{`[a b]`, `unexpected token Identifier("b") (1:4)
+ | ..........^`,
+		},
+		{
+			`[a b]`, `unexpected token Identifier("b") (1:4)
  | [a b]
- | ...^`},
-		{`foo.bar(a b)`, `unexpected token Identifier("b") (1:11)
+ | ...^`,
+		},
+		{
+			`foo.bar(a b)`, `unexpected token Identifier("b") (1:11)
  | foo.bar(a b)
- | ..........^`},
-		{`{-}`, `a map key must be a quoted string, a number, a identifier, or an expression enclosed in parentheses (unexpected token Operator("-")) (1:2)
+ | ..........^`,
+		},
+		{
+			`{-}`,
+			`a map key must be a quoted string, a number, a identifier, or an expression enclosed in parentheses (unexpected token Operator("-")) (1:2)
  | {-}
- | .^`},
-		{`foo({.bar})`, `a map key must be a quoted string, a number, a identifier, or an expression enclosed in parentheses (unexpected token Operator(".")) (1:6)
+ | .^`,
+		},
+		{
+			`foo({.bar})`,
+			`a map key must be a quoted string, a number, a identifier, or an expression enclosed in parentheses (unexpected token Operator(".")) (1:6)
  | foo({.bar})
- | .....^`},
-		{`[1, 2, 3,,]`, `unexpected token Operator(",") (1:10)
+ | .....^`,
+		},
+		{
+			`[1, 2, 3,,]`, `unexpected token Operator(",") (1:10)
  | [1, 2, 3,,]
- | .........^`},
-		{`[,]`, `unexpected token Operator(",") (1:2)
+ | .........^`,
+		},
+		{
+			`[,]`, `unexpected token Operator(",") (1:2)
  | [,]
- | .^`},
-		{`{,}`, `a map key must be a quoted string, a number, a identifier, or an expression enclosed in parentheses (unexpected token Operator(",")) (1:2)
+ | .^`,
+		},
+		{
+			`{,}`,
+			`a map key must be a quoted string, a number, a identifier, or an expression enclosed in parentheses (unexpected token Operator(",")) (1:2)
  | {,}
- | .^`},
-		{`{foo:1, bar:2, ,}`, `unexpected token Operator(",") (1:16)
+ | .^`,
+		},
+		{
+			`{foo:1, bar:2, ,}`, `unexpected token Operator(",") (1:16)
  | {foo:1, bar:2, ,}
- | ...............^`},
-		{`foo ?? bar || baz`, `Operator (||) and coalesce expressions (??) cannot be mixed. Wrap either by parentheses. (1:12)
+ | ...............^`,
+		},
+		{
+			`foo ?? bar || baz`,
+			`Operator (||) and coalesce expressions (??) cannot be mixed. Wrap either by parentheses. (1:12)
  | foo ?? bar || baz
- | ...........^`},
-		{`0b15`, `bad number syntax: "0b15" (1:4)
+ | ...........^`,
+		},
+		{
+			`0b15`, `bad number syntax: "0b15" (1:4)
  | 0b15
- | ...^`},
-		{`0X10G`, `bad number syntax: "0X10G" (1:5)
+ | ...^`,
+		},
+		{
+			`0X10G`, `bad number syntax: "0X10G" (1:5)
  | 0X10G
- | ....^`},
-		{`0o1E`, `invalid float literal: strconv.ParseFloat: parsing "0o1E": invalid syntax (1:4)
+ | ....^`,
+		},
+		{
+			`0o1E`, `invalid float literal: strconv.ParseFloat: parsing "0o1E": invalid syntax (1:4)
  | 0o1E
- | ...^`},
-		{`0b1E`, `invalid float literal: strconv.ParseFloat: parsing "0b1E": invalid syntax (1:4)
+ | ...^`,
+		},
+		{
+			`0b1E`, `invalid float literal: strconv.ParseFloat: parsing "0b1E": invalid syntax (1:4)
  | 0b1E
- | ...^`},
-		{`0b1E+6`, `bad number syntax: "0b1E+6" (1:6)
+ | ...^`,
+		},
+		{
+			`0b1E+6`, `bad number syntax: "0b1E+6" (1:6)
  | 0b1E+6
- | .....^`},
-		{`0b1E+1`, `invalid float literal: strconv.ParseFloat: parsing "0b1E+1": invalid syntax (1:6)
+ | .....^`,
+		},
+		{
+			`0b1E+1`, `invalid float literal: strconv.ParseFloat: parsing "0b1E+1": invalid syntax (1:6)
  | 0b1E+1
- | .....^`},
-		{`0o1E+1`, `invalid float literal: strconv.ParseFloat: parsing "0o1E+1": invalid syntax (1:6)
+ | .....^`,
+		},
+		{
+			`0o1E+1`, `invalid float literal: strconv.ParseFloat: parsing "0o1E+1": invalid syntax (1:6)
  | 0o1E+1
- | .....^`},
-		{`1E`, `invalid float literal: strconv.ParseFloat: parsing "1E": invalid syntax (1:2)
+ | .....^`,
+		},
+		{
+			`1E`, `invalid float literal: strconv.ParseFloat: parsing "1E": invalid syntax (1:2)
  | 1E
- | .^`},
-		{`1 not == [1, 2, 5]`, `unexpected token Operator("==") (1:7)
+ | .^`,
+		},
+		{
+			`1 not == [1, 2, 5]`, `unexpected token Operator("==") (1:7)
  | 1 not == [1, 2, 5]
- | ......^`},
-		{`foo(1; 2; 3)`, `unexpected token Operator(";") (1:6)
+ | ......^`,
+		},
+		{
+			`foo(1; 2; 3)`, `unexpected token Operator(";") (1:6)
  | foo(1; 2; 3)
- | .....^`},
+ | .....^`,
+		},
 		{
 			`map(ls, 1; 2; 3)`,
 			`wrap predicate with brackets { and } (1:10)
@@ -1029,13 +1297,15 @@ func TestParse_error(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			_, err := parser.Parse(test.input)
-			if err == nil {
-				err = fmt.Errorf("<nil>")
-			}
-			assert.Equal(t, test.err, err.Error(), test.input)
-		})
+		t.Run(
+			test.input, func(t *testing.T) {
+				_, err := parser.Parse(test.input)
+				if err == nil {
+					err = fmt.Errorf("<nil>")
+				}
+				assert.Equal(t, test.err, err.Error(), test.input)
+			},
+		)
 	}
 }
 
@@ -1162,7 +1432,14 @@ func TestParse_pipe_operator(t *testing.T) {
 								Node: &MemberNode{
 									Node:     &PointerNode{},
 									Property: &StringNode{Value: "foo"},
-								}}}}}}}}
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 
 	actual, err := parser.Parse(input)
 	require.NoError(t, err)
@@ -1209,26 +1486,28 @@ func TestNodeBudget(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			config := conf.CreateNew()
-			config.MaxNodes = tt.maxNodes
-			config.Disabled = make(map[string]bool, 0)
+		t.Run(
+			tt.name, func(t *testing.T) {
+				config := conf.CreateNew()
+				config.MaxNodes = tt.maxNodes
+				config.Disabled = make(map[string]bool, 0)
 
-			_, err := parser.ParseWithConfig(tt.expr, config)
-			hasError := err != nil && strings.Contains(err.Error(), "exceeds maximum allowed nodes")
+				_, err := parser.ParseWithConfig(tt.expr, config)
+				hasError := err != nil && strings.Contains(err.Error(), "exceeds maximum allowed nodes")
 
-			if hasError != tt.shouldError {
-				t.Errorf("ParseWithConfig(%q) error = %v, shouldError %v", tt.expr, err, tt.shouldError)
-			}
-
-			// Verify error message format when expected
-			if tt.shouldError && err != nil {
-				expected := "compilation failed: expression exceeds maximum allowed nodes"
-				if !strings.Contains(err.Error(), expected) {
-					t.Errorf("Expected error message to contain %q, got %q", expected, err.Error())
+				if hasError != tt.shouldError {
+					t.Errorf("ParseWithConfig(%q) error = %v, shouldError %v", tt.expr, err, tt.shouldError)
 				}
-			}
-		})
+
+				// Verify error message format when expected
+				if tt.shouldError && err != nil {
+					expected := "compilation failed: expression exceeds maximum allowed nodes"
+					if !strings.Contains(err.Error(), expected) {
+						t.Errorf("Expected error message to contain %q, got %q", expected, err.Error())
+					}
+				}
+			},
+		)
 	}
 }
 

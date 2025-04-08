@@ -7,15 +7,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/expr-lang/expr/internal/testify/assert"
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/assert"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/builtin"
-	"github.com/expr-lang/expr/checker"
-	"github.com/expr-lang/expr/conf"
-	"github.com/expr-lang/expr/parser"
-	"github.com/expr-lang/expr/test/mock"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/builtin"
+	"github.com/mvlootman/expr/checker"
+	"github.com/mvlootman/expr/conf"
+	"github.com/mvlootman/expr/parser"
+	"github.com/mvlootman/expr/test/mock"
 )
 
 func TestBuiltin(t *testing.T) {
@@ -113,7 +113,10 @@ func TestBuiltin(t *testing.T) {
 		{`duration("1h")`, time.Hour},
 		{`date("2006-01-02T15:04:05Z")`, time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC)},
 		{`date("2006.01.02", "2006.01.02")`, time.Date(2006, 1, 2, 0, 0, 0, 0, time.UTC)},
-		{`date("2023-04-23T00:30:00.000+0100", "2006-01-02T15:04:05-0700", "America/Chicago").Format("2006-01-02")`, "2023-04-23"},
+		{
+			`date("2023-04-23T00:30:00.000+0100", "2006-01-02T15:04:05-0700", "America/Chicago").Format("2006-01-02")`,
+			"2023-04-23",
+		},
 		{`date("2023-04-23T00:30:00", "2006-01-02T15:04:05", "America/Chicago").Format("2006-01-02")`, "2023-04-23"},
 		{`date("2023-04-23", "2006-01-02", "America/Chicago").Format("2006-01-02")`, "2023-04-23"},
 		{`timezone("UTC").String()`, "UTC"},
@@ -160,14 +163,16 @@ func TestBuiltin(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			program, err := expr.Compile(test.input, expr.Env(env))
-			require.NoError(t, err)
+		t.Run(
+			test.input, func(t *testing.T) {
+				program, err := expr.Compile(test.input, expr.Env(env))
+				require.NoError(t, err)
 
-			out, err := expr.Run(program, env)
-			require.NoError(t, err)
-			assert.Equal(t, test.want, out)
-		})
+				out, err := expr.Run(program, env)
+				require.NoError(t, err)
+				assert.Equal(t, test.want, out)
+			},
+		)
 	}
 }
 
@@ -185,21 +190,27 @@ func TestBuiltin_works_with_any(t *testing.T) {
 		if b.Predicate {
 			continue
 		}
-		t.Run(b.Name, func(t *testing.T) {
-			arity := 1
-			if c, ok := config[b.Name]; ok {
-				arity = c.arity
-			}
-			if len(b.Types) > 0 {
-				arity = b.Types[0].NumIn()
-			}
-			args := make([]string, arity)
-			for i := 1; i <= arity; i++ {
-				args[i-1] = fmt.Sprintf("arg%d", i)
-			}
-			_, err := expr.Compile(fmt.Sprintf(`%s(%s)`, b.Name, strings.Join(args, ", "))) // expr.Env(env) is not needed
-			assert.NoError(t, err)
-		})
+		t.Run(
+			b.Name, func(t *testing.T) {
+				arity := 1
+				if c, ok := config[b.Name]; ok {
+					arity = c.arity
+				}
+				if len(b.Types) > 0 {
+					arity = b.Types[0].NumIn()
+				}
+				args := make([]string, arity)
+				for i := 1; i <= arity; i++ {
+					args[i-1] = fmt.Sprintf("arg%d", i)
+				}
+				_, err := expr.Compile(
+					fmt.Sprintf(
+						`%s(%s)`, b.Name, strings.Join(args, ", "),
+					),
+				) // expr.Env(env) is not needed
+				assert.NoError(t, err)
+			},
+		)
 	}
 }
 
@@ -245,17 +256,19 @@ func TestBuiltin_errors(t *testing.T) {
 		{`flatten(1)`, "cannot flatten int"},
 	}
 	for _, test := range errorTests {
-		t.Run(test.input, func(t *testing.T) {
-			program, err := expr.Compile(test.input)
-			if err != nil {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), test.err)
-			} else {
-				_, err = expr.Run(program, nil)
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), test.err)
-			}
-		})
+		t.Run(
+			test.input, func(t *testing.T) {
+				program, err := expr.Compile(test.input)
+				if err != nil {
+					assert.Error(t, err)
+					assert.Contains(t, err.Error(), test.err)
+				} else {
+					_, err = expr.Run(program, nil)
+					assert.Error(t, err)
+					assert.Contains(t, err.Error(), test.err)
+				}
+			},
+		)
 	}
 }
 
@@ -283,14 +296,16 @@ func TestBuiltin_types(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			tree, err := parser.Parse(test.input)
-			require.NoError(t, err)
+		t.Run(
+			test.input, func(t *testing.T) {
+				tree, err := parser.Parse(test.input)
+				require.NoError(t, err)
 
-			rtype, err := checker.Check(tree, conf.New(env))
-			require.NoError(t, err)
-			require.True(t, rtype.Kind() == test.want, fmt.Sprintf("expected %s, got %s", test.want, rtype.Kind()))
-		})
+				rtype, err := checker.Check(tree, conf.New(env))
+				require.NoError(t, err)
+				require.True(t, rtype.Kind() == test.want, fmt.Sprintf("expected %s, got %s", test.want, rtype.Kind()))
+			},
+		)
 	}
 }
 
@@ -302,98 +317,118 @@ func TestBuiltin_memory_limits(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			timeout := make(chan bool, 1)
-			go func() {
-				time.Sleep(time.Second)
-				timeout <- true
-			}()
+		t.Run(
+			test.input, func(t *testing.T) {
+				timeout := make(chan bool, 1)
+				go func() {
+					time.Sleep(time.Second)
+					timeout <- true
+				}()
 
-			done := make(chan bool, 1)
-			go func() {
-				_, err := expr.Eval(test.input, nil)
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), "memory budget exceeded")
-				done <- true
-			}()
+				done := make(chan bool, 1)
+				go func() {
+					_, err := expr.Eval(test.input, nil)
+					assert.Error(t, err)
+					assert.Contains(t, err.Error(), "memory budget exceeded")
+					done <- true
+				}()
 
-			select {
-			case <-done:
-				// Success.
-			case <-timeout:
-				t.Fatal("timeout")
-			}
-		})
+				select {
+				case <-done:
+					// Success.
+				case <-timeout:
+					t.Fatal("timeout")
+				}
+			},
+		)
 	}
 }
 
 func TestBuiltin_allow_builtins_override(t *testing.T) {
-	t.Run("via env var", func(t *testing.T) {
-		for _, name := range builtin.Names {
-			t.Run(name, func(t *testing.T) {
-				env := map[string]any{
-					name: "hello world",
-				}
-				program, err := expr.Compile(name, expr.Env(env))
-				require.NoError(t, err)
+	t.Run(
+		"via env var", func(t *testing.T) {
+			for _, name := range builtin.Names {
+				t.Run(
+					name, func(t *testing.T) {
+						env := map[string]any{
+							name: "hello world",
+						}
+						program, err := expr.Compile(name, expr.Env(env))
+						require.NoError(t, err)
 
-				out, err := expr.Run(program, env)
-				require.NoError(t, err)
-				assert.Equal(t, "hello world", out)
-			})
-		}
-	})
-	t.Run("via env func", func(t *testing.T) {
-		for _, name := range builtin.Names {
-			t.Run(name, func(t *testing.T) {
-				env := map[string]any{
-					name: func() int { return 1 },
-				}
-				program, err := expr.Compile(fmt.Sprintf("%s()", name), expr.Env(env))
-				require.NoError(t, err)
-
-				out, err := expr.Run(program, env)
-				require.NoError(t, err)
-				assert.Equal(t, 1, out)
-			})
-		}
-	})
-	t.Run("via expr.Function", func(t *testing.T) {
-		for _, name := range builtin.Names {
-			t.Run(name, func(t *testing.T) {
-				fn := expr.Function(name,
-					func(params ...any) (any, error) {
-						return 42, nil
+						out, err := expr.Run(program, env)
+						require.NoError(t, err)
+						assert.Equal(t, "hello world", out)
 					},
-					new(func() int),
 				)
-				program, err := expr.Compile(fmt.Sprintf("%s()", name), fn)
-				require.NoError(t, err)
+			}
+		},
+	)
+	t.Run(
+		"via env func", func(t *testing.T) {
+			for _, name := range builtin.Names {
+				t.Run(
+					name, func(t *testing.T) {
+						env := map[string]any{
+							name: func() int { return 1 },
+						}
+						program, err := expr.Compile(fmt.Sprintf("%s()", name), expr.Env(env))
+						require.NoError(t, err)
 
-				out, err := expr.Run(program, nil)
-				require.NoError(t, err)
-				assert.Equal(t, 42, out)
-			})
-		}
-	})
-	t.Run("via expr.Function as pipe", func(t *testing.T) {
-		for _, name := range builtin.Names {
-			t.Run(name, func(t *testing.T) {
-				fn := expr.Function(name,
-					func(params ...any) (any, error) {
-						return 42, nil
+						out, err := expr.Run(program, env)
+						require.NoError(t, err)
+						assert.Equal(t, 1, out)
 					},
-					new(func(s string) int),
 				)
-				program, err := expr.Compile(fmt.Sprintf("'str' | %s()", name), fn)
-				require.NoError(t, err)
+			}
+		},
+	)
+	t.Run(
+		"via expr.Function", func(t *testing.T) {
+			for _, name := range builtin.Names {
+				t.Run(
+					name, func(t *testing.T) {
+						fn := expr.Function(
+							name,
+							func(params ...any) (any, error) {
+								return 42, nil
+							},
+							new(func() int),
+						)
+						program, err := expr.Compile(fmt.Sprintf("%s()", name), fn)
+						require.NoError(t, err)
 
-				out, err := expr.Run(program, nil)
-				require.NoError(t, err)
-				assert.Equal(t, 42, out)
-			})
-		}
-	})
+						out, err := expr.Run(program, nil)
+						require.NoError(t, err)
+						assert.Equal(t, 42, out)
+					},
+				)
+			}
+		},
+	)
+	t.Run(
+		"via expr.Function as pipe", func(t *testing.T) {
+			for _, name := range builtin.Names {
+				t.Run(
+					name, func(t *testing.T) {
+						fn := expr.Function(
+							name,
+							func(params ...any) (any, error) {
+								return 42, nil
+							},
+							new(func(s string) int),
+						)
+						program, err := expr.Compile(fmt.Sprintf("'str' | %s()", name), fn)
+						require.NoError(t, err)
+
+						out, err := expr.Run(program, nil)
+						require.NoError(t, err)
+						assert.Equal(t, 42, out)
+					},
+				)
+			}
+		},
+	)
 }
 
 func TestBuiltin_override_and_still_accessible(t *testing.T) {
@@ -411,45 +446,54 @@ func TestBuiltin_override_and_still_accessible(t *testing.T) {
 }
 
 func TestBuiltin_DisableBuiltin(t *testing.T) {
-	t.Run("via env", func(t *testing.T) {
-		for _, b := range builtin.Builtins {
-			if b.Predicate {
-				continue // TODO: allow to disable predicates
-			}
-			t.Run(b.Name, func(t *testing.T) {
-				env := map[string]any{
-					b.Name: func() int { return 42 },
+	t.Run(
+		"via env", func(t *testing.T) {
+			for _, b := range builtin.Builtins {
+				if b.Predicate {
+					continue // TODO: allow to disable predicates
 				}
-				program, err := expr.Compile(b.Name+"()", expr.Env(env), expr.DisableBuiltin(b.Name))
-				require.NoError(t, err)
+				t.Run(
+					b.Name, func(t *testing.T) {
+						env := map[string]any{
+							b.Name: func() int { return 42 },
+						}
+						program, err := expr.Compile(b.Name+"()", expr.Env(env), expr.DisableBuiltin(b.Name))
+						require.NoError(t, err)
 
-				out, err := expr.Run(program, env)
-				require.NoError(t, err)
-				assert.Equal(t, 42, out)
-			})
-		}
-	})
-	t.Run("via expr.Function", func(t *testing.T) {
-		for _, b := range builtin.Builtins {
-			if b.Predicate {
-				continue // TODO: allow to disable predicates
-			}
-			t.Run(b.Name, func(t *testing.T) {
-				fn := expr.Function(b.Name,
-					func(params ...any) (any, error) {
-						return 42, nil
+						out, err := expr.Run(program, env)
+						require.NoError(t, err)
+						assert.Equal(t, 42, out)
 					},
-					new(func() int),
 				)
-				program, err := expr.Compile(b.Name+"()", fn, expr.DisableBuiltin(b.Name))
-				require.NoError(t, err)
+			}
+		},
+	)
+	t.Run(
+		"via expr.Function", func(t *testing.T) {
+			for _, b := range builtin.Builtins {
+				if b.Predicate {
+					continue // TODO: allow to disable predicates
+				}
+				t.Run(
+					b.Name, func(t *testing.T) {
+						fn := expr.Function(
+							b.Name,
+							func(params ...any) (any, error) {
+								return 42, nil
+							},
+							new(func() int),
+						)
+						program, err := expr.Compile(b.Name+"()", fn, expr.DisableBuiltin(b.Name))
+						require.NoError(t, err)
 
-				out, err := expr.Run(program, nil)
-				require.NoError(t, err)
-				assert.Equal(t, 42, out)
-			})
-		}
-	})
+						out, err := expr.Run(program, nil)
+						require.NoError(t, err)
+						assert.Equal(t, 42, out)
+					},
+				)
+			}
+		},
+	)
 }
 
 func TestBuiltin_DisableAllBuiltins(t *testing.T) {
@@ -459,31 +503,38 @@ func TestBuiltin_DisableAllBuiltins(t *testing.T) {
 }
 
 func TestBuiltin_EnableBuiltin(t *testing.T) {
-	t.Run("via env", func(t *testing.T) {
-		env := map[string]any{
-			"repeat": func() string { return "repeat" },
-		}
-		program, err := expr.Compile(`len(repeat())`, expr.Env(env), expr.DisableAllBuiltins(), expr.EnableBuiltin("len"))
-		require.NoError(t, err)
+	t.Run(
+		"via env", func(t *testing.T) {
+			env := map[string]any{
+				"repeat": func() string { return "repeat" },
+			}
+			program, err := expr.Compile(
+				`len(repeat())`, expr.Env(env), expr.DisableAllBuiltins(), expr.EnableBuiltin("len"),
+			)
+			require.NoError(t, err)
 
-		out, err := expr.Run(program, env)
-		require.NoError(t, err)
-		assert.Equal(t, 6, out)
-	})
-	t.Run("via expr.Function", func(t *testing.T) {
-		fn := expr.Function("repeat",
-			func(params ...any) (any, error) {
-				return "repeat", nil
-			},
-			new(func() string),
-		)
-		program, err := expr.Compile(`len(repeat())`, fn, expr.DisableAllBuiltins(), expr.EnableBuiltin("len"))
-		require.NoError(t, err)
+			out, err := expr.Run(program, env)
+			require.NoError(t, err)
+			assert.Equal(t, 6, out)
+		},
+	)
+	t.Run(
+		"via expr.Function", func(t *testing.T) {
+			fn := expr.Function(
+				"repeat",
+				func(params ...any) (any, error) {
+					return "repeat", nil
+				},
+				new(func() string),
+			)
+			program, err := expr.Compile(`len(repeat())`, fn, expr.DisableAllBuiltins(), expr.EnableBuiltin("len"))
+			require.NoError(t, err)
 
-		out, err := expr.Run(program, nil)
-		require.NoError(t, err)
-		assert.Equal(t, 6, out)
-	})
+			out, err := expr.Run(program, nil)
+			require.NoError(t, err)
+			assert.Equal(t, 6, out)
+		},
+	)
 }
 
 func TestBuiltin_type(t *testing.T) {
@@ -507,22 +558,24 @@ func TestBuiltin_type(t *testing.T) {
 		{func() {}, "func"},
 		{time.Now(), "time.Time"},
 		{time.Second, "time.Duration"},
-		{Foo{}, "github.com/expr-lang/expr/builtin_test.Foo"},
+		{Foo{}, "github.com/mvlootman/expr/builtin_test.Foo"},
 		{struct{}{}, "struct"},
 		{a, "int"},
 	}
 	for _, test := range tests {
-		t.Run(test.want, func(t *testing.T) {
-			env := map[string]any{
-				"obj": test.obj,
-			}
-			program, err := expr.Compile(`type(obj)`, expr.Env(env))
-			require.NoError(t, err)
+		t.Run(
+			test.want, func(t *testing.T) {
+				env := map[string]any{
+					"obj": test.obj,
+				}
+				program, err := expr.Compile(`type(obj)`, expr.Env(env))
+				require.NoError(t, err)
 
-			out, err := expr.Run(program, env)
-			require.NoError(t, err)
-			assert.Equal(t, test.want, out)
-		})
+				out, err := expr.Run(program, env)
+				require.NoError(t, err)
+				assert.Equal(t, test.want, out)
+			},
+		)
 	}
 }
 
@@ -543,18 +596,23 @@ func TestBuiltin_reverse(t *testing.T) {
 		{`reverse(ArrayOfFoo)`, []any{mock.Foo{Value: "b"}, mock.Foo{Value: "a"}, mock.Foo{Value: "c"}}},
 		{`reverse([[1,2], [2,2]])`, []any{[]any{2, 2}, []any{1, 2}}},
 		{`reverse(reverse([[1,2], [2,2]]))`, []any{[]any{1, 2}, []any{2, 2}}},
-		{`reverse([{"test": true}, {id:4}, {name: "value"}])`, []any{map[string]any{"name": "value"}, map[string]any{"id": 4}, map[string]any{"test": true}}},
+		{
+			`reverse([{"test": true}, {id:4}, {name: "value"}])`,
+			[]any{map[string]any{"name": "value"}, map[string]any{"id": 4}, map[string]any{"test": true}},
+		},
 	}
 
 	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			program, err := expr.Compile(test.input, expr.Env(env))
-			require.NoError(t, err)
+		t.Run(
+			test.input, func(t *testing.T) {
+				program, err := expr.Compile(test.input, expr.Env(env))
+				require.NoError(t, err)
 
-			out, err := expr.Run(program, env)
-			require.NoError(t, err)
-			assert.Equal(t, test.want, out)
-		})
+				out, err := expr.Run(program, env)
+				require.NoError(t, err)
+				assert.Equal(t, test.want, out)
+			},
+		)
 	}
 }
 
@@ -578,14 +636,16 @@ func TestBuiltin_sort(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			program, err := expr.Compile(test.input, expr.Env(env))
-			require.NoError(t, err)
+		t.Run(
+			test.input, func(t *testing.T) {
+				program, err := expr.Compile(test.input, expr.Env(env))
+				require.NoError(t, err)
 
-			out, err := expr.Run(program, env)
-			require.NoError(t, err)
-			assert.Equal(t, test.want, out)
-		})
+				out, err := expr.Run(program, env)
+				require.NoError(t, err)
+				assert.Equal(t, test.want, out)
+			},
+		)
 	}
 }
 
@@ -619,15 +679,17 @@ func TestBuiltin_bitOpsFunc(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			program, err := expr.Compile(test.input, expr.Env(nil))
-			require.NoError(t, err)
+		t.Run(
+			test.input, func(t *testing.T) {
+				program, err := expr.Compile(test.input, expr.Env(nil))
+				require.NoError(t, err)
 
-			out, err := expr.Run(program, nil)
-			fmt.Printf("%v : %v", test.input, out)
-			require.NoError(t, err)
-			assert.Equal(t, test.want, out)
-		})
+				out, err := expr.Run(program, nil)
+				fmt.Printf("%v : %v", test.input, out)
+				require.NoError(t, err)
+				assert.Equal(t, test.want, out)
+			},
+		)
 	}
 }
 
@@ -707,18 +769,20 @@ func TestBuiltin_with_deref(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			program, err := expr.Compile(test.input, expr.Env(env))
-			require.NoError(t, err)
-			println(program.Disassemble())
+		t.Run(
+			test.input, func(t *testing.T) {
+				program, err := expr.Compile(test.input, expr.Env(env))
+				require.NoError(t, err)
+				println(program.Disassemble())
 
-			out, err := expr.Run(program, env)
-			require.NoError(t, err)
-			assert.Equal(t, test.want, out)
+				out, err := expr.Run(program, env)
+				require.NoError(t, err)
+				assert.Equal(t, test.want, out)
 
-			out, err = expr.Eval(test.input, env)
-			require.NoError(t, err)
-			assert.Equal(t, test.want, out)
-		})
+				out, err = expr.Eval(test.input, env)
+				require.NoError(t, err)
+				assert.Equal(t, test.want, out)
+			},
+		)
 	}
 }

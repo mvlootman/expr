@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/expr-lang/expr/file"
-	"github.com/expr-lang/expr/internal/testify/assert"
-	"github.com/expr-lang/expr/internal/testify/require"
-	. "github.com/expr-lang/expr/parser/lexer"
+	"github.com/mvlootman/expr/file"
+	"github.com/mvlootman/expr/internal/testify/assert"
+	"github.com/mvlootman/expr/internal/testify/require"
+	. "github.com/mvlootman/expr/parser/lexer"
 )
 
 func TestLex(t *testing.T) {
@@ -60,8 +60,10 @@ func TestLex(t *testing.T) {
 			[]Token{
 				{Kind: String, Value: `backtick`},
 				{Kind: String, Value: `hello☺world`},
-				{Kind: String, Value: `hello
-	world`},
+				{
+					Kind: String, Value: `hello
+	world`,
+				},
 				{Kind: String, Value: `hello"world'`},
 				{Kind: String, Value: `ÿ☺Ψ`},
 				{Kind: String, Value: "❤️"},
@@ -278,16 +280,18 @@ func TestLex(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			tokens, err := Lex(file.NewSource(test.input))
-			if err != nil {
-				t.Errorf("%s:\n%v", test.input, err)
-				return
-			}
-			if !compareTokens(tokens, test.tokens) {
-				t.Errorf("%s:\ngot\n\t%+v\nexpected\n\t%v", test.input, tokens, test.tokens)
-			}
-		})
+		t.Run(
+			test.input, func(t *testing.T) {
+				tokens, err := Lex(file.NewSource(test.input))
+				if err != nil {
+					t.Errorf("%s:\n%v", test.input, err)
+					return
+				}
+				if !compareTokens(tokens, test.tokens) {
+					t.Errorf("%s:\ngot\n\t%+v\nexpected\n\t%v", test.input, tokens, test.tokens)
+				}
+			},
+		)
 	}
 }
 
@@ -310,15 +314,17 @@ func TestLex_location(t *testing.T) {
 	source := file.NewSource("1..2\n3..4")
 	tokens, err := Lex(source)
 	require.NoError(t, err)
-	require.Equal(t, []Token{
-		{Location: file.Location{From: 0, To: 1}, Kind: Number, Value: "1"},
-		{Location: file.Location{From: 1, To: 3}, Kind: Operator, Value: ".."},
-		{Location: file.Location{From: 3, To: 4}, Kind: Number, Value: "2"},
-		{Location: file.Location{From: 5, To: 6}, Kind: Number, Value: "3"},
-		{Location: file.Location{From: 6, To: 8}, Kind: Operator, Value: ".."},
-		{Location: file.Location{From: 8, To: 9}, Kind: Number, Value: "4"},
-		{Location: file.Location{From: 8, To: 9}, Kind: EOF, Value: ""},
-	}, tokens)
+	require.Equal(
+		t, []Token{
+			{Location: file.Location{From: 0, To: 1}, Kind: Number, Value: "1"},
+			{Location: file.Location{From: 1, To: 3}, Kind: Operator, Value: ".."},
+			{Location: file.Location{From: 3, To: 4}, Kind: Number, Value: "2"},
+			{Location: file.Location{From: 5, To: 6}, Kind: Number, Value: "3"},
+			{Location: file.Location{From: 6, To: 8}, Kind: Operator, Value: ".."},
+			{Location: file.Location{From: 8, To: 9}, Kind: Number, Value: "4"},
+			{Location: file.Location{From: 8, To: 9}, Kind: EOF, Value: ""},
+		}, tokens,
+	)
 }
 
 const errorTests = `

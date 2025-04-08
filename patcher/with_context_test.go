@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/patcher"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/patcher"
 )
 
 func TestWithContext(t *testing.T) {
@@ -36,7 +36,8 @@ func TestWithContext_with_env_Function(t *testing.T) {
 		"ctx": context.TODO(),
 	}
 
-	fn := expr.Function("fn",
+	fn := expr.Function(
+		"fn",
 		func(params ...any) (any, error) {
 			ctx := params[0].(context.Context)
 			a := params[1].(int)
@@ -99,7 +100,8 @@ func TestWithContext_with_env_method_chain(t *testing.T) {
 		"ctx": context.TODO(),
 	}
 
-	fn := expr.Function("fn",
+	fn := expr.Function(
+		"fn",
 		func(params ...any) (any, error) {
 			ctx := params[0].(context.Context)
 

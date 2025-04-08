@@ -1,7 +1,7 @@
 package optimizer
 
 import (
-	. "github.com/expr-lang/expr/ast"
+	. "github.com/mvlootman/expr/ast"
 )
 
 type filterLen struct{}
@@ -13,10 +13,12 @@ func (*filterLen) Visit(node *Node) {
 		if filter, ok := ln.Arguments[0].(*BuiltinNode); ok &&
 			filter.Name == "filter" &&
 			len(filter.Arguments) == 2 {
-			patchCopyType(node, &BuiltinNode{
-				Name:      "count",
-				Arguments: filter.Arguments,
-			})
+			patchCopyType(
+				node, &BuiltinNode{
+					Name:      "count",
+					Arguments: filter.Arguments,
+				},
+			)
 		}
 	}
 }

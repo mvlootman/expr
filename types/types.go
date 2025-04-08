@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	. "github.com/expr-lang/expr/checker/nature"
+	. "github.com/mvlootman/expr/checker/nature"
 )
 
 // Type is a type that can be used to represent a value.

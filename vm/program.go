@@ -9,10 +9,10 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/expr-lang/expr/ast"
-	"github.com/expr-lang/expr/builtin"
-	"github.com/expr-lang/expr/file"
-	"github.com/expr-lang/expr/vm/runtime"
+	"github.com/mvlootman/expr/ast"
+	"github.com/mvlootman/expr/builtin"
+	"github.com/mvlootman/expr/file"
+	"github.com/mvlootman/expr/vm/runtime"
 )
 
 // Program represents a compiled expression.
@@ -103,7 +103,9 @@ func (program *Program) DisassembleWriter(w io.Writer) {
 			_, _ = fmt.Fprintf(w, "%v\t%v\t<%v>\n", pp, label, arg)
 		}
 		argumentWithInfo := func(label string, prefix string) {
-			_, _ = fmt.Fprintf(w, "%v\t%v\t<%v>\t%v\n", pp, label, arg, program.debugInfo[fmt.Sprintf("%s_%d", prefix, arg)])
+			_, _ = fmt.Fprintf(
+				w, "%v\t%v\t<%v>\t%v\n", pp, label, arg, program.debugInfo[fmt.Sprintf("%s_%d", prefix, arg)],
+			)
 		}
 		constant := func(label string) {
 			var c any

@@ -3,8 +3,8 @@ package optimizer
 import (
 	"math"
 
-	. "github.com/expr-lang/expr/ast"
-	"github.com/expr-lang/expr/file"
+	. "github.com/mvlootman/expr/ast"
+	"github.com/mvlootman/expr/file"
 )
 
 type fold struct {
@@ -292,17 +292,19 @@ func (fold *fold) Visit(node *Node) {
 				return
 			}
 			if base, ok := n.Arguments[0].(*BuiltinNode); ok && base.Name == "filter" {
-				patchCopy(&BuiltinNode{
-					Name: "filter",
-					Arguments: []Node{
-						base.Arguments[0],
-						&BinaryNode{
-							Operator: "&&",
-							Left:     base.Arguments[1].(*PredicateNode).Node,
-							Right:    n.Arguments[1].(*PredicateNode).Node,
+				patchCopy(
+					&BuiltinNode{
+						Name: "filter",
+						Arguments: []Node{
+							base.Arguments[0],
+							&BinaryNode{
+								Operator: "&&",
+								Left:     base.Arguments[1].(*PredicateNode).Node,
+								Right:    n.Arguments[1].(*PredicateNode).Node,
+							},
 						},
 					},
-				})
+				)
 			}
 		}
 	}

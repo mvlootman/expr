@@ -3,7 +3,7 @@ package fuzz
 import (
 	"fmt"
 
-	"github.com/expr-lang/expr"
+	"github.com/mvlootman/expr"
 )
 
 func NewEnv() map[string]any {
@@ -32,9 +32,11 @@ func NewEnv() map[string]any {
 }
 
 func Func() expr.Option {
-	return expr.Function("fn", func(params ...any) (any, error) {
-		return fmt.Sprintf("fn(%v)", params), nil
-	})
+	return expr.Function(
+		"fn", func(params ...any) (any, error) {
+			return fmt.Sprintf("fn(%v)", params), nil
+		},
+	)
 }
 
 type Foo struct {

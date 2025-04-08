@@ -3,10 +3,10 @@ package expr_test
 import (
 	"testing"
 
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/vm"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/vm"
 )
 
 func Benchmark_expr(b *testing.B) {
@@ -16,7 +16,9 @@ func Benchmark_expr(b *testing.B) {
 	params["Adults"] = 1
 	params["Value"] = 100
 
-	program, err := expr.Compile(`(Origin == "MOW" || Country == "RU") && (Value >= 100 || Adults == 1)`, expr.Env(params))
+	program, err := expr.Compile(
+		`(Origin == "MOW" || Country == "RU") && (Value >= 100 || Adults == 1)`, expr.Env(params),
+	)
 	require.NoError(b, err)
 
 	var out any
@@ -58,7 +60,9 @@ func Benchmark_expr_reuseVm(b *testing.B) {
 	params["Adults"] = 1
 	params["Value"] = 100
 
-	program, err := expr.Compile(`(Origin == "MOW" || Country == "RU") && (Value >= 100 || Adults == 1)`, expr.Env(params))
+	program, err := expr.Compile(
+		`(Origin == "MOW" || Country == "RU") && (Value >= 100 || Adults == 1)`, expr.Env(params),
+	)
 	require.NoError(b, err)
 
 	var out any
@@ -477,7 +481,12 @@ func Benchmark_largeNestedArrayAccess(b *testing.B) {
 
 func Benchmark_sort(b *testing.B) {
 	env := map[string]any{
-		"arr": []any{55, 58, 42, 61, 75, 52, 64, 62, 16, 79, 40, 14, 50, 76, 23, 2, 5, 80, 89, 51, 21, 96, 91, 13, 71, 82, 65, 63, 11, 17, 94, 81, 74, 4, 97, 1, 39, 3, 28, 8, 84, 90, 47, 85, 7, 56, 49, 93, 33, 12, 19, 60, 86, 100, 44, 45, 36, 72, 95, 77, 34, 92, 24, 73, 18, 38, 43, 26, 41, 69, 67, 57, 9, 27, 66, 87, 46, 35, 59, 70, 10, 20, 53, 15, 32, 98, 68, 31, 54, 25, 83, 88, 22, 48, 29, 37, 6, 78, 99, 30},
+		"arr": []any{
+			55, 58, 42, 61, 75, 52, 64, 62, 16, 79, 40, 14, 50, 76, 23, 2, 5, 80, 89, 51, 21, 96, 91, 13, 71, 82, 65,
+			63, 11, 17, 94, 81, 74, 4, 97, 1, 39, 3, 28, 8, 84, 90, 47, 85, 7, 56, 49, 93, 33, 12, 19, 60, 86, 100, 44,
+			45, 36, 72, 95, 77, 34, 92, 24, 73, 18, 38, 43, 26, 41, 69, 67, 57, 9, 27, 66, 87, 46, 35, 59, 70, 10, 20,
+			53, 15, 32, 98, 68, 31, 54, 25, 83, 88, 22, 48, 29, 37, 6, 78, 99, 30,
+		},
 	}
 
 	program, err := expr.Compile(`sort(arr)`, expr.Env(env))
@@ -498,7 +507,12 @@ func Benchmark_sortBy(b *testing.B) {
 	type Foo struct {
 		Value int
 	}
-	arr := []any{55, 58, 42, 61, 75, 52, 64, 62, 16, 79, 40, 14, 50, 76, 23, 2, 5, 80, 89, 51, 21, 96, 91, 13, 71, 82, 65, 63, 11, 17, 94, 81, 74, 4, 97, 1, 39, 3, 28, 8, 84, 90, 47, 85, 7, 56, 49, 93, 33, 12, 19, 60, 86, 100, 44, 45, 36, 72, 95, 77, 34, 92, 24, 73, 18, 38, 43, 26, 41, 69, 67, 57, 9, 27, 66, 87, 46, 35, 59, 70, 10, 20, 53, 15, 32, 98, 68, 31, 54, 25, 83, 88, 22, 48, 29, 37, 6, 78, 99, 30}
+	arr := []any{
+		55, 58, 42, 61, 75, 52, 64, 62, 16, 79, 40, 14, 50, 76, 23, 2, 5, 80, 89, 51, 21, 96, 91, 13, 71, 82, 65, 63,
+		11, 17, 94, 81, 74, 4, 97, 1, 39, 3, 28, 8, 84, 90, 47, 85, 7, 56, 49, 93, 33, 12, 19, 60, 86, 100, 44, 45, 36,
+		72, 95, 77, 34, 92, 24, 73, 18, 38, 43, 26, 41, 69, 67, 57, 9, 27, 66, 87, 46, 35, 59, 70, 10, 20, 53, 15, 32,
+		98, 68, 31, 54, 25, 83, 88, 22, 48, 29, 37, 6, 78, 99, 30,
+	}
 	env := map[string]any{
 		"arr": make([]Foo, len(arr)),
 	}

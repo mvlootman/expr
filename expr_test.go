@@ -11,14 +11,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/expr-lang/expr/internal/testify/assert"
-	"github.com/expr-lang/expr/internal/testify/require"
-	"github.com/expr-lang/expr/types"
+	"github.com/mvlootman/expr/internal/testify/assert"
+	"github.com/mvlootman/expr/internal/testify/require"
+	"github.com/mvlootman/expr/types"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/ast"
-	"github.com/expr-lang/expr/file"
-	"github.com/expr-lang/expr/test/mock"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/ast"
+	"github.com/mvlootman/expr/file"
+	"github.com/mvlootman/expr/test/mock"
 )
 
 // `adhoc testing`
@@ -182,6 +182,11 @@ func TestEvalDecimal(t *testing.T) {
 			description: "array of decimal does not equal empty array ",
 			code:        `len([decVal, decVal]) > len([decVal])`,
 			want:        true,
+		},
+		{
+			description: "decimal Multiplied int",
+			code:        `decVal * 100`,
+			want:        decimal.NewFromInt(10),
 		},
 	}
 

@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/expr-lang/expr/internal/testify/assert"
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/assert"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/test/mock"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/test/mock"
 )
 
 func TestOperator_struct(t *testing.T) {
@@ -29,9 +29,11 @@ func TestOperator_struct(t *testing.T) {
 
 func TestOperator_no_env(t *testing.T) {
 	code := `Time == "2017-10-23"`
-	require.Panics(t, func() {
-		_, _ = expr.Compile(code, expr.Operator("==", "TimeEqualString"))
-	})
+	require.Panics(
+		t, func() {
+			_, _ = expr.Compile(code, expr.Operator("==", "TimeEqualString"))
+		},
+	)
 }
 
 func TestOperator_interface(t *testing.T) {
@@ -77,28 +79,32 @@ func TestOperator_Function(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(fmt.Sprintf(`operator function helper test %s`, tt.input), func(t *testing.T) {
-			program, err := expr.Compile(
-				tt.input,
-				expr.Env(env),
-				expr.Operator("+", "Add", "AddInt"),
-				expr.Function("Add", func(args ...interface{}) (interface{}, error) {
-					return args[0].(Value).Int + args[1].(Value).Int, nil
-				},
-					new(func(_ Value, __ Value) int),
-				),
-				expr.Function("AddInt", func(args ...interface{}) (interface{}, error) {
-					return args[0].(int) + args[1].(int), nil
-				},
-					new(func(_ int, __ int) int),
-				),
-			)
-			require.NoError(t, err)
+		t.Run(
+			fmt.Sprintf(`operator function helper test %s`, tt.input), func(t *testing.T) {
+				program, err := expr.Compile(
+					tt.input,
+					expr.Env(env),
+					expr.Operator("+", "Add", "AddInt"),
+					expr.Function(
+						"Add", func(args ...interface{}) (interface{}, error) {
+							return args[0].(Value).Int + args[1].(Value).Int, nil
+						},
+						new(func(_ Value, __ Value) int),
+					),
+					expr.Function(
+						"AddInt", func(args ...interface{}) (interface{}, error) {
+							return args[0].(int) + args[1].(int), nil
+						},
+						new(func(_ int, __ int) int),
+					),
+				)
+				require.NoError(t, err)
 
-			output, err := expr.Run(program, env)
-			require.NoError(t, err)
-			require.Equal(t, tt.want, output)
-		})
+				output, err := expr.Run(program, env)
+				require.NoError(t, err)
+				require.Equal(t, tt.want, output)
+			},
+		)
 	}
 
 }
@@ -109,29 +115,36 @@ func TestOperator_Function_WithTypes(t *testing.T) {
 		"bar": Value{2},
 	}
 
-	assert.PanicsWithError(t, `function "Add" for "+" operator misses types`, func() {
-		_, _ = expr.Compile(
-			`foo + bar`,
-			expr.Env(env),
-			expr.Operator("+", "Add", "AddInt"),
-			expr.Function("Add", func(args ...interface{}) (interface{}, error) {
-				return args[0].(Value).Int + args[1].(Value).Int, nil
-			}),
-		)
-	})
+	assert.PanicsWithError(
+		t, `function "Add" for "+" operator misses types`, func() {
+			_, _ = expr.Compile(
+				`foo + bar`,
+				expr.Env(env),
+				expr.Operator("+", "Add", "AddInt"),
+				expr.Function(
+					"Add", func(args ...interface{}) (interface{}, error) {
+						return args[0].(Value).Int + args[1].(Value).Int, nil
+					},
+				),
+			)
+		},
+	)
 
-	assert.PanicsWithError(t, `function "Add" for "+" operator does not have a correct signature`, func() {
-		_, _ = expr.Compile(
-			`foo + bar`,
-			expr.Env(env),
-			expr.Operator("+", "Add", "AddInt"),
-			expr.Function("Add", func(args ...interface{}) (interface{}, error) {
-				return args[0].(Value).Int + args[1].(Value).Int, nil
-			},
-				new(func(_ Value) int),
-			),
-		)
-	})
+	assert.PanicsWithError(
+		t, `function "Add" for "+" operator does not have a correct signature`, func() {
+			_, _ = expr.Compile(
+				`foo + bar`,
+				expr.Env(env),
+				expr.Operator("+", "Add", "AddInt"),
+				expr.Function(
+					"Add", func(args ...interface{}) (interface{}, error) {
+						return args[0].(Value).Int + args[1].(Value).Int, nil
+					},
+					new(func(_ Value) int),
+				),
+			)
+		},
+	)
 }
 
 func TestOperator_FunctionOverTypesPrecedence(t *testing.T) {
@@ -147,10 +160,11 @@ func TestOperator_FunctionOverTypesPrecedence(t *testing.T) {
 		`1 + 2`,
 		expr.Env(env),
 		expr.Operator("+", "Add"),
-		expr.Function("Add", func(args ...interface{}) (interface{}, error) {
-			// Weird function that returns 100 + a + b for testing purposes.
-			return args[0].(int) + args[1].(int) + 100, nil
-		},
+		expr.Function(
+			"Add", func(args ...interface{}) (interface{}, error) {
+				// Weird function that returns 100 + a + b for testing purposes.
+				return args[0].(int) + args[1].(int) + 100, nil
+			},
 			new(func(_ int, __ int) int),
 		),
 	)
@@ -174,9 +188,10 @@ func TestOperator_CanBeDefinedEitherInTypesOrInFunctions(t *testing.T) {
 		`1 + 2`,
 		expr.Env(env),
 		expr.Operator("+", "Add", "AddValues"),
-		expr.Function("AddValues", func(args ...interface{}) (interface{}, error) {
-			return args[0].(Value).Int + args[1].(Value).Int, nil
-		},
+		expr.Function(
+			"AddValues", func(args ...interface{}) (interface{}, error) {
+				return args[0].(Value).Int + args[1].(Value).Int, nil
+			},
 			new(func(_ Value, __ Value) int),
 		),
 	)
@@ -204,9 +219,10 @@ func TestOperator_Polymorphic(t *testing.T) {
 		`1 + 2 + (Foo + Bar)`,
 		expr.Env(env),
 		expr.Operator("+", "Add", "AddValues"),
-		expr.Function("AddValues", func(args ...interface{}) (interface{}, error) {
-			return args[0].(Value).Int + args[1].(Value).Int, nil
-		},
+		expr.Function(
+			"AddValues", func(args ...interface{}) (interface{}, error) {
+				return args[0].(Value).Int + args[1].(Value).Int, nil
+			},
 			new(func(_ Value, __ Value) int),
 		),
 	)

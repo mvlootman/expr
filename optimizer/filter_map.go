@@ -1,7 +1,7 @@
 package optimizer
 
 import (
-	. "github.com/expr-lang/expr/ast"
+	. "github.com/mvlootman/expr/ast"
 )
 
 type filterMap struct{}
@@ -15,11 +15,13 @@ func (*filterMap) Visit(node *Node) {
 			if filter, ok := mapBuiltin.Arguments[0].(*BuiltinNode); ok &&
 				filter.Name == "filter" &&
 				filter.Map == nil /* not already optimized */ {
-				patchCopyType(node, &BuiltinNode{
-					Name:      "filter",
-					Arguments: filter.Arguments,
-					Map:       predicate.Node,
-				})
+				patchCopyType(
+					node, &BuiltinNode{
+						Name:      "filter",
+						Arguments: filter.Arguments,
+						Map:       predicate.Node,
+					},
+				)
 			}
 		}
 	}

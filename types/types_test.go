@@ -3,8 +3,8 @@ package types_test
 import (
 	"testing"
 
-	"github.com/expr-lang/expr/internal/testify/require"
-	. "github.com/expr-lang/expr/types"
+	"github.com/mvlootman/expr/internal/testify/require"
+	. "github.com/mvlootman/expr/types"
 )
 
 func TestType_Equal(t *testing.T) {
@@ -39,12 +39,14 @@ func TestType_Equal(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.index, func(t *testing.T) {
-			if tt.want {
-				require.True(t, tt.a.Equal(tt.b), tt.a.String()+" == "+tt.b.String())
-			} else {
-				require.False(t, tt.a.Equal(tt.b), tt.a.String()+" == "+tt.b.String())
-			}
-		})
+		t.Run(
+			tt.index, func(t *testing.T) {
+				if tt.want {
+					require.True(t, tt.a.Equal(tt.b), tt.a.String()+" == "+tt.b.String())
+				} else {
+					require.False(t, tt.a.Equal(tt.b), tt.a.String()+" == "+tt.b.String())
+				}
+			},
+		)
 	}
 }

@@ -23,7 +23,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/expr-lang/expr/internal/spew"
+	"github.com/mvlootman/expr/internal/spew"
 )
 
 // spewFunc is used to identify which public function of the spew package or
@@ -151,8 +151,10 @@ func initSpewTests() {
 		slice []string
 		m     map[string]int
 	}
-	dt := depthTester{indirCir1{nil}, [1]string{"arr"}, []string{"slice"},
-		map[string]int{"one": 1}}
+	dt := depthTester{
+		indirCir1{nil}, [1]string{"arr"}, []string{"slice"},
+		map[string]int{"one": 1},
+	}
 
 	// Variable for tests on types which implement error interface.
 	te := customError(10)
@@ -188,17 +190,23 @@ func initSpewTests() {
 		{scsNoPmethods, fCSFprint, "", tps, "test"},
 		{scsNoPmethods, fCSFprint, "", &tps, "<*>stringer test"},
 		{scsMaxDepth, fCSFprint, "", dt, "{{<max>} [<max>] [<max>] map[<max>]}"},
-		{scsMaxDepth, fCSFdump, "", dt, "(spew_test.depthTester) {\n" +
-			" ic: (spew_test.indirCir1) {\n  <max depth reached>\n },\n" +
-			" arr: ([1]string) (len=1 cap=1) {\n  <max depth reached>\n },\n" +
-			" slice: ([]string) (len=1 cap=1) {\n  <max depth reached>\n },\n" +
-			" m: (map[string]int) (len=1) {\n  <max depth reached>\n }\n}\n"},
+		{
+			scsMaxDepth, fCSFdump, "", dt, "(spew_test.depthTester) {\n" +
+				" ic: (spew_test.indirCir1) {\n  <max depth reached>\n },\n" +
+				" arr: ([1]string) (len=1 cap=1) {\n  <max depth reached>\n },\n" +
+				" slice: ([]string) (len=1 cap=1) {\n  <max depth reached>\n },\n" +
+				" m: (map[string]int) (len=1) {\n  <max depth reached>\n }\n}\n",
+		},
 		{scsContinue, fCSFprint, "", ts, "(stringer test) test"},
-		{scsContinue, fCSFdump, "", ts, "(spew_test.stringer) " +
-			"(len=4) (stringer test) \"test\"\n"},
+		{
+			scsContinue, fCSFdump, "", ts, "(spew_test.stringer) " +
+				"(len=4) (stringer test) \"test\"\n",
+		},
 		{scsContinue, fCSFprint, "", te, "(error: 10) 10"},
-		{scsContinue, fCSFdump, "", te, "(spew_test.customError) " +
-			"(error: 10) 10\n"},
+		{
+			scsContinue, fCSFdump, "", te, "(spew_test.customError) " +
+				"(error: 10) 10\n",
+		},
 		{scsNoPtrAddr, fCSFprint, "", tptr, "<*>{<*>{}}"},
 		{scsNoPtrAddr, fCSSdump, "", tptr, "(*spew_test.ptrTester)({\ns: (*struct {})({\n})\n})\n"},
 		{scsNoCap, fCSSdump, "", make([]string, 0, 10), "([]string) {\n}\n"},
