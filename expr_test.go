@@ -188,6 +188,12 @@ func TestEvalDecimal(t *testing.T) {
 			code:        `decVal * 100`,
 			want:        decimal.NewFromInt(10),
 		},
+		// test builtin functions
+		{
+			description: "decimal function inside builtin function",
+			code:        `abs(decimal(3.34))`,
+			want:        decimal.NewFromFloat(3.34),
+		},
 	}
 
 	for _, tc := range testCases {
