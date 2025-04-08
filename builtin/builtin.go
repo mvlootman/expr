@@ -130,8 +130,13 @@ var Builtins = []*Function{
 				return anyType, fmt.Errorf("invalid number of arguments (expected 1, got %d)", len(args))
 			}
 			switch kind(args[0]) {
-			case reflect.Float32, reflect.Float64, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Interface:
+			case reflect.Float32, reflect.Float64, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32,
+				reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Interface:
 				return args[0], nil
+			case reflect.Struct:
+				if args[0].PkgPath() == "github.com/shopspring/decimal" {
+					return args[0], nil
+				}
 			}
 			return anyType, fmt.Errorf("invalid argument for abs (type %s)", args[0])
 		},
