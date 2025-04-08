@@ -405,6 +405,12 @@ func median(args ...any) ([]float64, error) {
 			values = append(values, float64(rv.Uint()))
 		case reflect.Float32, reflect.Float64:
 			values = append(values, rv.Float())
+		case reflect.Struct:
+			if rv.Type().PkgPath() == "github.com/shopspring/decimal" {
+				// we return floats here as that is expected in the built-in median
+				values = append(values, rv.Interface().(decimal.Decimal).InexactFloat64())
+			}
+
 		default:
 			return nil, fmt.Errorf("invalid argument for median (type %T)", arg)
 		}

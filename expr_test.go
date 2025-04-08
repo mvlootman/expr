@@ -190,9 +190,24 @@ func TestEvalDecimal(t *testing.T) {
 		},
 		// test builtin functions
 		{
-			description: "decimal function inside builtin function",
+			description: "decimal function inside builtin abs function",
 			code:        `abs(decimal(3.34))`,
 			want:        decimal.NewFromFloat(3.34),
+		},
+		{
+			description: "decimal function mixed inside builtin min function",
+			code:        `min([decimal(3.34), decimal(1.2), 4])`,
+			want:        decimal.NewFromFloat(1.2),
+		},
+		{
+			description: "decimal function mixed inside builtin min function",
+			code:        `max([decimal(3.34), decimal(1.2), decimal(4.1)])`,
+			want:        decimal.NewFromFloat(4.1),
+		},
+		{
+			description: "decimal function mixed inside builtin median function",
+			code:        `median([decimal(3.34), decimal(1.2), decimal(4.3)])`,
+			want:        float64(3.34),
 		},
 	}
 
