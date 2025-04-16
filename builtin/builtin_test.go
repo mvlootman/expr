@@ -2,6 +2,7 @@ package builtin_test
 
 import (
 	"fmt"
+	"github.com/shopspring/decimal"
 	"reflect"
 	"strings"
 	"testing"
@@ -621,7 +622,17 @@ func TestBuiltin_sort(t *testing.T) {
 		"ArrayOfString": []string{"foo", "bar", "baz"},
 		"ArrayOfInt":    []int{3, 2, 1},
 		"ArrayOfFloat":  []float64{3.0, 2.0, 1.0},
-		"ArrayOfFoo":    []mock.Foo{{Value: "c"}, {Value: "a"}, {Value: "b"}},
+		"ArrayOfTime": []time.Time{
+			time.Date(2020, 1, 1, 1, 1, 1, 1, time.UTC),
+			time.Date(2023, 1, 1, 1, 1, 1, 1, time.UTC),
+			time.Date(2019, 1, 1, 1, 1, 1, 1, time.UTC),
+		},
+		"ArrayOfDecimal": []decimal.Decimal{
+			decimal.NewFromFloat(3.4),
+			decimal.NewFromFloat(1.2),
+			decimal.NewFromFloat(7.1),
+		},
+		"ArrayOfFoo": []mock.Foo{{Value: "c"}, {Value: "a"}, {Value: "b"}},
 	}
 	tests := []struct {
 		input string
@@ -631,8 +642,25 @@ func TestBuiltin_sort(t *testing.T) {
 		{`sort(ArrayOfInt)`, []any{1, 2, 3}},
 		{`sort(ArrayOfFloat)`, []any{1.0, 2.0, 3.0}},
 		{`sort(ArrayOfInt, 'desc')`, []any{3, 2, 1}},
+		{
+			`sort(ArrayOfTime)`, []any{
+				time.Date(2019, 1, 1, 1, 1, 1, 1, time.UTC),
+				time.Date(2020, 1, 1, 1, 1, 1, 1, time.UTC),
+				time.Date(2023, 1, 1, 1, 1, 1, 1, time.UTC),
+			},
+		},
+		{
+			`sort(ArrayOfDecimal)`, []any{
+				decimal.NewFromFloat(1.2),
+				decimal.NewFromFloat(3.4),
+				decimal.NewFromFloat(7.1),
+			},
+		},
 		{`sortBy(ArrayOfFoo, .Value)`, []any{mock.Foo{Value: "a"}, mock.Foo{Value: "b"}, mock.Foo{Value: "c"}}},
-		{`sortBy([{id: "a"}, {id: "b"}], .id, "desc")`, []any{map[string]any{"id": "b"}, map[string]any{"id": "a"}}},
+		{
+			`sortBy([{id: "a"}, {id: "b"}], .id, "desc")`,
+			[]any{map[string]any{"id": "b"}, map[string]any{"id": "a"}},
+		},
 	}
 
 	for _, test := range tests {

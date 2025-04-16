@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/shopspring/decimal"
 	"reflect"
 	"sort"
 	"strings"
@@ -1015,6 +1016,16 @@ var Builtins = []*Function{
 				for i, v := range in {
 					array[i] = v
 				}
+			case []time.Time:
+				array = make([]any, len(in))
+				for i, v := range in {
+					array[i] = v
+				}
+			case []decimal.Decimal:
+				array = make([]any, len(in))
+				for i, v := range in {
+					array[i] = v
+				}
 			}
 
 			var desc bool
@@ -1042,11 +1053,15 @@ var Builtins = []*Function{
 			new(func([]int, string) []any),
 			new(func([]float64, string) []any),
 			new(func([]string, string) []any),
+			new(func([]time.Time, string) []any),
+			new(func([]decimal.Decimal, string) []any),
 
 			new(func([]any) []any),
+			new(func([]int) []any),
 			new(func([]float64) []any),
 			new(func([]string) []any),
-			new(func([]int) []any),
+			new(func([]time.Time) []any),
+			new(func([]decimal.Decimal) []any),
 		),
 	},
 	bitFunc(

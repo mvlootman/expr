@@ -1,6 +1,8 @@
 module github.com/expr-lang/expr/repl
 
-go 1.20
+go 1.23.0
+
+toolchain go1.24.2
 
 require (
 	github.com/bettercap/readline v0.0.0-20210228151553-655e48bcb7bf
