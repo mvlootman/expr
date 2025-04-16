@@ -4,13 +4,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/shopspring/decimal"
 	"reflect"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/expr-lang/expr/internal/deref"
-	"github.com/expr-lang/expr/vm/runtime"
+	"github.com/mvlootman/expr/internal/deref"
+	"github.com/mvlootman/expr/vm/runtime"
 )
 
 var (
@@ -130,8 +131,13 @@ var Builtins = []*Function{
 				return anyType, fmt.Errorf("invalid number of arguments (expected 1, got %d)", len(args))
 			}
 			switch kind(args[0]) {
-			case reflect.Float32, reflect.Float64, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Interface:
+			case reflect.Float32, reflect.Float64, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32,
+				reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Interface:
 				return args[0], nil
+			case reflect.Struct:
+				if args[0].PkgPath() == "github.com/shopspring/decimal" {
+					return args[0], nil
+				}
 			}
 			return anyType, fmt.Errorf("invalid argument for abs (type %s)", args[0])
 		},
@@ -1010,6 +1016,16 @@ var Builtins = []*Function{
 				for i, v := range in {
 					array[i] = v
 				}
+			case []time.Time:
+				array = make([]any, len(in))
+				for i, v := range in {
+					array[i] = v
+				}
+			case []decimal.Decimal:
+				array = make([]any, len(in))
+				for i, v := range in {
+					array[i] = v
+				}
 			}
 
 			var desc bool
@@ -1037,11 +1053,15 @@ var Builtins = []*Function{
 			new(func([]int, string) []any),
 			new(func([]float64, string) []any),
 			new(func([]string, string) []any),
+			new(func([]time.Time, string) []any),
+			new(func([]decimal.Decimal, string) []any),
 
 			new(func([]any) []any),
+			new(func([]int) []any),
 			new(func([]float64) []any),
 			new(func([]string) []any),
-			new(func([]int) []any),
+			new(func([]time.Time) []any),
+			new(func([]decimal.Decimal) []any),
 		),
 	},
 	bitFunc(

@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr/checker"
-	"github.com/expr-lang/expr/test/mock"
+	"github.com/mvlootman/expr/checker"
+	"github.com/mvlootman/expr/test/mock"
 )
 
 func TestTypedFuncIndex(t *testing.T) {

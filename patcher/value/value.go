@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/ast"
-	"github.com/expr-lang/expr/conf"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/ast"
+	"github.com/mvlootman/expr/conf"
 )
 
 // ValueGetter is a Patcher that allows custom types to be represented as standard go values for use with expr.
@@ -22,10 +22,12 @@ import (
 // contain metadata such as column type and if a value is specifically a NULL value.
 //
 // Use it directly as an Option to expr.Compile()
-var ValueGetter = expr.Option(func(c *conf.Config) {
-	c.Visitors = append(c.Visitors, patcher{})
-	getValueFunc(c)
-})
+var ValueGetter = expr.Option(
+	func(c *conf.Config) {
+		c.Visitors = append(c.Visitors, patcher{})
+		getValueFunc(c)
+	},
+)
 
 // A AnyValuer provides a generic function for a custom type to return standard go values.
 // It allows for returning a `nil` value but does not provide any type checking at expression compile.
@@ -138,10 +140,12 @@ func (patcher) Visit(node *ast.Node) {
 		nodeType := id.Type()
 		for _, t := range supportedInterfaces {
 			if nodeType.Implements(t) {
-				ast.Patch(node, &ast.CallNode{
-					Callee:    &ast.IdentifierNode{Value: "$patcher_value_getter"},
-					Arguments: []ast.Node{id},
-				})
+				ast.Patch(
+					node, &ast.CallNode{
+						Callee:    &ast.IdentifierNode{Value: "$patcher_value_getter"},
+						Arguments: []ast.Node{id},
+					},
+				)
 				return
 			}
 		}
@@ -193,7 +197,8 @@ func getValue(params ...any) (any, error) {
 	return params[0], nil
 }
 
-var getValueFunc = expr.Function("$patcher_value_getter", getValue,
+var getValueFunc = expr.Function(
+	"$patcher_value_getter", getValue,
 	new(func(BoolValuer) bool),
 	new(func(IntValuer) int),
 	new(func(Int8Valuer) int8),

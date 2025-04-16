@@ -11,14 +11,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/expr-lang/expr/internal/testify/assert"
-	"github.com/expr-lang/expr/internal/testify/require"
-	"github.com/expr-lang/expr/types"
+	"github.com/mvlootman/expr/internal/testify/assert"
+	"github.com/mvlootman/expr/internal/testify/require"
+	"github.com/mvlootman/expr/types"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/ast"
-	"github.com/expr-lang/expr/file"
-	"github.com/expr-lang/expr/test/mock"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/ast"
+	"github.com/mvlootman/expr/file"
+	"github.com/mvlootman/expr/test/mock"
 )
 
 // `adhoc testing`
@@ -182,6 +182,32 @@ func TestEvalDecimal(t *testing.T) {
 			description: "array of decimal does not equal empty array ",
 			code:        `len([decVal, decVal]) > len([decVal])`,
 			want:        true,
+		},
+		{
+			description: "decimal Multiplied int",
+			code:        `decVal * 100`,
+			want:        decimal.NewFromInt(10),
+		},
+		// test builtin functions
+		{
+			description: "decimal function inside builtin abs function",
+			code:        `abs(decimal(3.34))`,
+			want:        decimal.NewFromFloat(3.34),
+		},
+		{
+			description: "decimal function mixed inside builtin min function",
+			code:        `min([decimal(3.34), decimal(1.2), 4])`,
+			want:        decimal.NewFromFloat(1.2),
+		},
+		{
+			description: "decimal function mixed inside builtin min function",
+			code:        `max([decimal(3.34), decimal(1.2), decimal(4.1)])`,
+			want:        decimal.NewFromFloat(4.1),
+		},
+		{
+			description: "decimal function mixed inside builtin median function",
+			code:        `median([decimal(3.34), decimal(1.2), decimal(4.3)])`,
+			want:        float64(3.34),
 		},
 	}
 

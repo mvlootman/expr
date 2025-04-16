@@ -6,13 +6,13 @@ import (
 	"strconv"
 	"strings"
 
-	. "github.com/expr-lang/expr/ast"
-	"github.com/expr-lang/expr/builtin"
-	"github.com/expr-lang/expr/conf"
-	"github.com/expr-lang/expr/file"
-	. "github.com/expr-lang/expr/parser/lexer"
-	"github.com/expr-lang/expr/parser/operator"
-	"github.com/expr-lang/expr/parser/utils"
+	. "github.com/mvlootman/expr/ast"
+	"github.com/mvlootman/expr/builtin"
+	"github.com/mvlootman/expr/conf"
+	"github.com/mvlootman/expr/file"
+	. "github.com/mvlootman/expr/parser/lexer"
+	"github.com/mvlootman/expr/parser/operator"
+	"github.com/mvlootman/expr/parser/utils"
 )
 
 type arg byte
@@ -181,9 +181,11 @@ func (p *parser) parseSequenceExpression() Node {
 		return nodes[0]
 	}
 
-	return p.createNode(&SequenceNode{
-		Nodes: nodes,
-	}, nodes[0].Location())
+	return p.createNode(
+		&SequenceNode{
+			Nodes: nodes,
+		}, nodes[0].Location(),
+	)
 }
 
 func (p *parser) parseExpression(precedence int) Node {
@@ -237,7 +239,10 @@ func (p *parser) parseExpression(precedence int) Node {
 			}
 
 			if prevOperator == "??" && opToken.Value != "??" && !opToken.Is(Bracket, "(") {
-				p.errorAt(opToken, "Operator (%v) and coalesce expressions (??) cannot be mixed. Wrap either by parentheses.", opToken.Value)
+				p.errorAt(
+					opToken, "Operator (%v) and coalesce expressions (??) cannot be mixed. Wrap either by parentheses.",
+					opToken.Value,
+				)
 				break
 			}
 
@@ -253,20 +258,24 @@ func (p *parser) parseExpression(precedence int) Node {
 				nodeRight = p.parseExpression(op.Precedence)
 			}
 
-			nodeLeft = p.createNode(&BinaryNode{
-				Operator: opToken.Value,
-				Left:     nodeLeft,
-				Right:    nodeRight,
-			}, opToken.Location)
+			nodeLeft = p.createNode(
+				&BinaryNode{
+					Operator: opToken.Value,
+					Left:     nodeLeft,
+					Right:    nodeRight,
+				}, opToken.Location,
+			)
 			if nodeLeft == nil {
 				return nil
 			}
 
 			if negate {
-				nodeLeft = p.createNode(&UnaryNode{
-					Operator: "not",
-					Node:     nodeLeft,
-				}, notToken.Location)
+				nodeLeft = p.createNode(
+					&UnaryNode{
+						Operator: "not",
+						Node:     nodeLeft,
+					}, notToken.Location,
+				)
 				if nodeLeft == nil {
 					return nil
 				}
@@ -296,11 +305,13 @@ func (p *parser) parseVariableDeclaration() Node {
 	value := p.parseExpression(0)
 	p.expect(Operator, ";")
 	node := p.parseSequenceExpression()
-	return p.createNode(&VariableDeclaratorNode{
-		Name:  variableName.Value,
-		Value: value,
-		Expr:  node,
-	}, variableName.Location)
+	return p.createNode(
+		&VariableDeclaratorNode{
+			Name:  variableName.Value,
+			Value: value,
+			Expr:  node,
+		}, variableName.Location,
+	)
 }
 
 func (p *parser) parseConditionalIf() Node {
@@ -337,11 +348,13 @@ func (p *parser) parseConditional(node Node) Node {
 			expr2 = p.parseExpression(0)
 		}
 
-		node = p.createNode(&ConditionalNode{
-			Cond: node,
-			Exp1: expr1,
-			Exp2: expr2,
-		}, p.current.Location)
+		node = p.createNode(
+			&ConditionalNode{
+				Cond: node,
+				Exp1: expr1,
+				Exp2: expr2,
+			}, p.current.Location,
+		)
 		if node == nil {
 			return nil
 		}
@@ -356,10 +369,12 @@ func (p *parser) parsePrimary() Node {
 		if op, ok := operator.Unary[token.Value]; ok {
 			p.next()
 			expr := p.parseExpression(op.Precedence)
-			node := p.createNode(&UnaryNode{
-				Operator: token.Value,
-				Node:     expr,
-			}, token.Location)
+			node := p.createNode(
+				&UnaryNode{
+					Operator: token.Value,
+					Node:     expr,
+				}, token.Location,
+			)
 			if node == nil {
 				return nil
 			}
@@ -563,18 +578,22 @@ func (p *parser) parseCall(token Token, arguments []Node, checkOverrides bool) N
 		}
 		p.expect(Bracket, ")")
 
-		node = p.createNode(&BuiltinNode{
-			Name:      token.Value,
-			Arguments: arguments,
-		}, token.Location)
+		node = p.createNode(
+			&BuiltinNode{
+				Name:      token.Value,
+				Arguments: arguments,
+			}, token.Location,
+		)
 		if node == nil {
 			return nil
 		}
 	} else if _, ok := builtin.Index[token.Value]; ok && (p.config == nil || !p.config.Disabled[token.Value]) && !isOverridden {
-		node = p.createNode(&BuiltinNode{
-			Name:      token.Value,
-			Arguments: p.parseArguments(arguments),
-		}, token.Location)
+		node = p.createNode(
+			&BuiltinNode{
+				Name:      token.Value,
+				Arguments: p.parseArguments(arguments),
+			}, token.Location,
+		)
 		if node == nil {
 			return nil
 		}
@@ -584,10 +603,12 @@ func (p *parser) parseCall(token Token, arguments []Node, checkOverrides bool) N
 		if callee == nil {
 			return nil
 		}
-		node = p.createNode(&CallNode{
-			Callee:    callee,
-			Arguments: p.parseArguments(arguments),
-		}, token.Location)
+		node = p.createNode(
+			&CallNode{
+				Callee:    callee,
+				Arguments: p.parseArguments(arguments),
+			}, token.Location,
+		)
 		if node == nil {
 			return nil
 		}
@@ -639,9 +660,11 @@ func (p *parser) parsePredicate() Node {
 	if withBrackets {
 		p.expect(Bracket, "}")
 	}
-	predicateNode := p.createNode(&PredicateNode{
-		Node: node,
-	}, startToken.Location)
+	predicateNode := p.createNode(
+		&PredicateNode{
+			Node: node,
+		}, startToken.Location,
+	)
 	if predicateNode == nil {
 		return nil
 	}
@@ -702,7 +725,10 @@ func (p *parser) parseMapExpression(token Token) Node {
 		} else if p.current.Is(Bracket, "(") {
 			key = p.parseExpression(0)
 		} else {
-			p.error("a map key must be a quoted string, a number, a identifier, or an expression enclosed in parentheses (unexpected token %v)", p.current)
+			p.error(
+				"a map key must be a quoted string, a number, a identifier, or an expression enclosed in parentheses (unexpected token %v)",
+				p.current,
+			)
 		}
 
 		p.expect(Operator, ":")
@@ -758,21 +784,25 @@ func (p *parser) parsePostfixExpression(node Node) Node {
 				node = chainNode.Node
 			}
 
-			memberNode := p.createMemberNode(&MemberNode{
-				Node:     node,
-				Property: property,
-				Optional: optional,
-			}, propertyToken.Location)
+			memberNode := p.createMemberNode(
+				&MemberNode{
+					Node:     node,
+					Property: property,
+					Optional: optional,
+				}, propertyToken.Location,
+			)
 			if memberNode == nil {
 				return nil
 			}
 
 			if p.current.Is(Bracket, "(") {
 				memberNode.Method = true
-				node = p.createNode(&CallNode{
-					Callee:    memberNode,
-					Arguments: p.parseArguments([]Node{}),
-				}, propertyToken.Location)
+				node = p.createNode(
+					&CallNode{
+						Callee:    memberNode,
+						Arguments: p.parseArguments([]Node{}),
+					}, propertyToken.Location,
+				)
 				if node == nil {
 					return nil
 				}
@@ -798,10 +828,12 @@ func (p *parser) parsePostfixExpression(node Node) Node {
 					to = p.parseExpression(0)
 				}
 
-				node = p.createNode(&SliceNode{
-					Node: node,
-					To:   to,
-				}, postfixToken.Location)
+				node = p.createNode(
+					&SliceNode{
+						Node: node,
+						To:   to,
+					}, postfixToken.Location,
+				)
 				if node == nil {
 					return nil
 				}
@@ -818,11 +850,13 @@ func (p *parser) parsePostfixExpression(node Node) Node {
 						to = p.parseExpression(0)
 					}
 
-					node = p.createNode(&SliceNode{
-						Node: node,
-						From: from,
-						To:   to,
-					}, postfixToken.Location)
+					node = p.createNode(
+						&SliceNode{
+							Node: node,
+							From: from,
+							To:   to,
+						}, postfixToken.Location,
+					)
 					if node == nil {
 						return nil
 					}
@@ -831,11 +865,13 @@ func (p *parser) parsePostfixExpression(node Node) Node {
 				} else {
 					// Slice operator [:] was not found,
 					// it should be just an index node.
-					node = p.createNode(&MemberNode{
-						Node:     node,
-						Property: from,
-						Optional: optional,
-					}, postfixToken.Location)
+					node = p.createNode(
+						&MemberNode{
+							Node:     node,
+							Property: from,
+							Optional: optional,
+						}, postfixToken.Location,
+					)
 					if node == nil {
 						return nil
 					}
@@ -859,22 +895,26 @@ func (p *parser) parseComparison(left Node, token Token, precedence int) Node {
 	var rootNode Node
 	for {
 		comparator := p.parseExpression(precedence + 1)
-		cmpNode := p.createNode(&BinaryNode{
-			Operator: token.Value,
-			Left:     left,
-			Right:    comparator,
-		}, token.Location)
+		cmpNode := p.createNode(
+			&BinaryNode{
+				Operator: token.Value,
+				Left:     left,
+				Right:    comparator,
+			}, token.Location,
+		)
 		if cmpNode == nil {
 			return nil
 		}
 		if rootNode == nil {
 			rootNode = cmpNode
 		} else {
-			rootNode = p.createNode(&BinaryNode{
-				Operator: "&&",
-				Left:     rootNode,
-				Right:    cmpNode,
-			}, token.Location)
+			rootNode = p.createNode(
+				&BinaryNode{
+					Operator: "&&",
+					Left:     rootNode,
+					Right:    cmpNode,
+				}, token.Location,
+			)
 			if rootNode == nil {
 				return nil
 			}

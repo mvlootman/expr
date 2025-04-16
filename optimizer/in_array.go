@@ -3,7 +3,7 @@ package optimizer
 import (
 	"reflect"
 
-	. "github.com/expr-lang/expr/ast"
+	. "github.com/mvlootman/expr/ast"
 )
 
 type inArray struct{}
@@ -34,11 +34,13 @@ func (*inArray) Visit(node *Node) {
 						}
 						m := &ConstantNode{Value: value}
 						m.SetType(reflect.TypeOf(value))
-						patchCopyType(node, &BinaryNode{
-							Operator: n.Operator,
-							Left:     n.Left,
-							Right:    m,
-						})
+						patchCopyType(
+							node, &BinaryNode{
+								Operator: n.Operator,
+								Left:     n.Left,
+								Right:    m,
+							},
+						)
 					}
 
 				string:
@@ -54,11 +56,13 @@ func (*inArray) Visit(node *Node) {
 						}
 						m := &ConstantNode{Value: value}
 						m.SetType(reflect.TypeOf(value))
-						patchCopyType(node, &BinaryNode{
-							Operator: n.Operator,
-							Left:     n.Left,
-							Right:    m,
-						})
+						patchCopyType(
+							node, &BinaryNode{
+								Operator: n.Operator,
+								Left:     n.Left,
+								Right:    m,
+							},
+						)
 					}
 
 				}

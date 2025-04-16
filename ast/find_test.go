@@ -3,9 +3,9 @@ package ast_test
 import (
 	"testing"
 
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr/ast"
+	"github.com/mvlootman/expr/ast"
 )
 
 func TestFind(t *testing.T) {
@@ -20,12 +20,14 @@ func TestFind(t *testing.T) {
 		},
 	}
 
-	x := ast.Find(root, func(node ast.Node) bool {
-		if n, ok := node.(*ast.IdentifierNode); ok {
-			return n.Value == "a"
-		}
-		return false
-	})
+	x := ast.Find(
+		root, func(node ast.Node) bool {
+			if n, ok := node.(*ast.IdentifierNode); ok {
+				return n.Value == "a"
+			}
+			return false
+		},
+	)
 
 	require.Equal(t, left, x)
 }

@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"unicode/utf8"
 
-	"github.com/expr-lang/expr/internal/deref"
-	"github.com/expr-lang/expr/vm/runtime"
+	"github.com/mvlootman/expr/internal/deref"
+	"github.com/mvlootman/expr/vm/runtime"
 )
 
 func Len(x any) any {
@@ -72,6 +72,8 @@ func Abs(x any) any {
 		} else {
 			return x
 		}
+	case decimal.Decimal:
+		return x.Abs()
 	case int:
 		if x < 0 {
 			return -x
@@ -144,6 +146,8 @@ func Ceil(x any) any {
 		return math.Ceil(x)
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
 		return Float(x)
+	case decimal.Decimal:
+		return x.Ceil()
 	}
 	panic(fmt.Sprintf("invalid argument for ceil (type %T)", x))
 }
@@ -156,6 +160,8 @@ func Floor(x any) any {
 		return math.Floor(x)
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
 		return Float(x)
+	case decimal.Decimal:
+		return x.Floor()
 	}
 	panic(fmt.Sprintf("invalid argument for floor (type %T)", x))
 }
@@ -168,6 +174,8 @@ func Round(x any) any {
 		return math.Round(x)
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
 		return Float(x)
+	case decimal.Decimal:
+		return x.Round(0)
 	}
 	panic(fmt.Sprintf("invalid argument for round (type %T)", x))
 }
@@ -178,6 +186,8 @@ func Int(x any) any {
 		return int(x)
 	case float64:
 		return int(x)
+	case decimal.Decimal:
+		return x.IntPart()
 	case int:
 		return x
 	case int8:
@@ -219,6 +229,8 @@ func Float(x any) any {
 		return float64(x)
 	case float64:
 		return x
+	case decimal.Decimal:
+		return x.InexactFloat64()
 	case int:
 		return float64(x)
 	case int8:
@@ -306,7 +318,7 @@ func minMax(name string, fn func(any, any) bool, args ...any) (any, error) {
 				switch elemVal.(type) {
 				case int, int8, int16, int32, int64,
 					uint, uint8, uint16, uint32, uint64,
-					float32, float64:
+					float32, float64, decimal.Decimal:
 					if elemVal != nil && (val == nil || fn(val, elemVal)) {
 						val = elemVal
 					}
@@ -321,6 +333,13 @@ func minMax(name string, fn func(any, any) bool, args ...any) (any, error) {
 			elemVal := rv.Interface()
 			if val == nil || fn(val, elemVal) {
 				val = elemVal
+			}
+		case reflect.Struct:
+			if rv.Type().PkgPath() == "github.com/shopspring/decimal" {
+				elemVal := rv.Interface()
+				if val == nil || fn(val, elemVal) {
+					val = elemVal
+				}
 			}
 		default:
 			if len(args) == 1 {
@@ -386,6 +405,12 @@ func median(args ...any) ([]float64, error) {
 			values = append(values, float64(rv.Uint()))
 		case reflect.Float32, reflect.Float64:
 			values = append(values, rv.Float())
+		case reflect.Struct:
+			if rv.Type().PkgPath() == "github.com/shopspring/decimal" {
+				// we return floats here as that is expected in the built-in median
+				values = append(values, rv.Interface().(decimal.Decimal).InexactFloat64())
+			}
+
 		default:
 			return nil, fmt.Errorf("invalid argument for median (type %T)", arg)
 		}

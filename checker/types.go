@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"time"
 
-	. "github.com/expr-lang/expr/checker/nature"
+	. "github.com/mvlootman/expr/checker/nature"
 )
 
 var (

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/internal/testify/require"
 )
 
 var updateFlag = flag.Bool("update", false, "Drop failing lines from examples.txt")
@@ -24,25 +24,27 @@ func TestGenerated(t *testing.T) {
 
 	for _, line := range strings.Split(examples, "\n") {
 		line := line
-		t.Run(line, func(t *testing.T) {
-			program, err := expr.Compile(line, expr.Env(Env))
-			if err != nil {
-				if !*updateFlag {
-					t.Errorf("Compilation failed: %v", err)
+		t.Run(
+			line, func(t *testing.T) {
+				program, err := expr.Compile(line, expr.Env(Env))
+				if err != nil {
+					if !*updateFlag {
+						t.Errorf("Compilation failed: %v", err)
+					}
+					return
 				}
-				return
-			}
 
-			_, err = expr.Run(program, Env)
-			if err != nil {
-				if !*updateFlag {
-					t.Errorf("Execution failed: %v", err)
+				_, err = expr.Run(program, Env)
+				if err != nil {
+					if !*updateFlag {
+						t.Errorf("Execution failed: %v", err)
+					}
+					return
 				}
-				return
-			}
 
-			validLines = append(validLines, line)
-		})
+				validLines = append(validLines, line)
+			},
+		)
 	}
 
 	if *updateFlag {

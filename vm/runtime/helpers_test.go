@@ -3,9 +3,9 @@ package runtime_test
 import (
 	"testing"
 
-	"github.com/expr-lang/expr/internal/testify/assert"
+	"github.com/mvlootman/expr/internal/testify/assert"
 
-	"github.com/expr-lang/expr/vm/runtime"
+	"github.com/mvlootman/expr/vm/runtime"
 )
 
 var tests = []struct {
@@ -37,22 +37,26 @@ var tests = []struct {
 
 func TestEqual(t *testing.T) {
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := runtime.Equal(tt.a, tt.b)
-			assert.Equal(t, tt.want, got, "Equal(%v, %v) = %v; want %v", tt.a, tt.b, got, tt.want)
-			got = runtime.Equal(tt.b, tt.a)
-			assert.Equal(t, tt.want, got, "Equal(%v, %v) = %v; want %v", tt.b, tt.a, got, tt.want)
-		})
+		t.Run(
+			tt.name, func(t *testing.T) {
+				got := runtime.Equal(tt.a, tt.b)
+				assert.Equal(t, tt.want, got, "Equal(%v, %v) = %v; want %v", tt.a, tt.b, got, tt.want)
+				got = runtime.Equal(tt.b, tt.a)
+				assert.Equal(t, tt.want, got, "Equal(%v, %v) = %v; want %v", tt.b, tt.a, got, tt.want)
+			},
+		)
 	}
 
 }
 
 func BenchmarkEqual(b *testing.B) {
 	for _, tt := range tests {
-		b.Run(tt.name, func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				runtime.Equal(tt.a, tt.b)
-			}
-		})
+		b.Run(
+			tt.name, func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					runtime.Equal(tt.a, tt.b)
+				}
+			},
+		)
 	}
 }

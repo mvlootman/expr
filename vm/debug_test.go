@@ -6,11 +6,11 @@ package vm_test
 import (
 	"testing"
 
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr/compiler"
-	"github.com/expr-lang/expr/parser"
-	"github.com/expr-lang/expr/vm"
+	"github.com/mvlootman/expr/compiler"
+	"github.com/mvlootman/expr/parser"
+	"github.com/mvlootman/expr/vm"
 )
 
 func TestDebugger(t *testing.T) {

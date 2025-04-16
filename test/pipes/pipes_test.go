@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr"
+	"github.com/mvlootman/expr"
 )
 
 func TestPipes(t *testing.T) {
@@ -37,14 +37,16 @@ func TestPipes(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			program, err := expr.Compile(test.input, expr.Env(env))
-			require.NoError(t, err)
+		t.Run(
+			test.input, func(t *testing.T) {
+				program, err := expr.Compile(test.input, expr.Env(env))
+				require.NoError(t, err)
 
-			out, err := expr.Run(program, env)
-			require.NoError(t, err)
-			require.Equal(t, test.want, out)
-		})
+				out, err := expr.Run(program, env)
+				require.NoError(t, err)
+				require.Equal(t, test.want, out)
+			},
+		)
 	}
 }
 

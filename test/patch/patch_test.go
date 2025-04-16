@@ -3,11 +3,11 @@ package patch_test
 import (
 	"testing"
 
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/ast"
-	"github.com/expr-lang/expr/test/mock"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/ast"
+	"github.com/mvlootman/expr/test/mock"
 )
 
 type lengthPatcher struct{}
@@ -16,10 +16,12 @@ func (p *lengthPatcher) Visit(node *ast.Node) {
 	switch n := (*node).(type) {
 	case *ast.MemberNode:
 		if prop, ok := n.Property.(*ast.StringNode); ok && prop.Value == "length" {
-			ast.Patch(node, &ast.BuiltinNode{
-				Name:      "len",
-				Arguments: []ast.Node{n.Node},
-			})
+			ast.Patch(
+				node, &ast.BuiltinNode{
+					Name:      "len",
+					Arguments: []ast.Node{n.Node},
+				},
+			)
 		}
 	}
 }

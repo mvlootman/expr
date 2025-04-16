@@ -5,15 +5,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/expr-lang/expr/internal/testify/assert"
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/assert"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/ast"
-	"github.com/expr-lang/expr/checker"
-	"github.com/expr-lang/expr/conf"
-	"github.com/expr-lang/expr/optimizer"
-	"github.com/expr-lang/expr/parser"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/ast"
+	"github.com/mvlootman/expr/checker"
+	"github.com/mvlootman/expr/conf"
+	"github.com/mvlootman/expr/optimizer"
+	"github.com/mvlootman/expr/parser"
 )
 
 func TestOptimize(t *testing.T) {
@@ -73,21 +73,23 @@ func TestOptimize(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.expr, func(t *testing.T) {
-			program, err := expr.Compile(tt.expr, expr.Env(env))
-			require.NoError(t, err)
+		t.Run(
+			tt.expr, func(t *testing.T) {
+				program, err := expr.Compile(tt.expr, expr.Env(env))
+				require.NoError(t, err)
 
-			output, err := expr.Run(program, env)
-			require.NoError(t, err)
-			assert.Equal(t, tt.want, output)
+				output, err := expr.Run(program, env)
+				require.NoError(t, err)
+				assert.Equal(t, tt.want, output)
 
-			unoptimizedProgram, err := expr.Compile(tt.expr, expr.Env(env), expr.Optimize(false))
-			require.NoError(t, err)
+				unoptimizedProgram, err := expr.Compile(tt.expr, expr.Env(env), expr.Optimize(false))
+				require.NoError(t, err)
 
-			unoptimizedOutput, err := expr.Run(unoptimizedProgram, env)
-			require.NoError(t, err)
-			assert.Equal(t, tt.want, unoptimizedOutput)
-		})
+				unoptimizedOutput, err := expr.Run(unoptimizedProgram, env)
+				require.NoError(t, err)
+				assert.Equal(t, tt.want, unoptimizedOutput)
+			},
+		)
 	}
 }
 
@@ -360,53 +362,55 @@ func TestOptimize_predicate_combination(t *testing.T) {
 
 	for _, tt := range tests {
 		rule := fmt.Sprintf(`%s(users, .Age > 18 and .Name != "Bob") %s %s(users, .Age < 30)`, tt.fn, tt.op, tt.fn)
-		t.Run(rule, func(t *testing.T) {
-			tree, err := parser.Parse(rule)
-			require.NoError(t, err)
+		t.Run(
+			rule, func(t *testing.T) {
+				tree, err := parser.Parse(rule)
+				require.NoError(t, err)
 
-			err = optimizer.Optimize(&tree.Node, nil)
-			require.NoError(t, err)
+				err = optimizer.Optimize(&tree.Node, nil)
+				require.NoError(t, err)
 
-			expected := &ast.BuiltinNode{
-				Name: tt.fn,
-				Arguments: []ast.Node{
-					&ast.IdentifierNode{Value: "users"},
-					&ast.PredicateNode{
-						Node: &ast.BinaryNode{
-							Operator: tt.wantOp,
-							Left: &ast.BinaryNode{
-								Operator: "and",
+				expected := &ast.BuiltinNode{
+					Name: tt.fn,
+					Arguments: []ast.Node{
+						&ast.IdentifierNode{Value: "users"},
+						&ast.PredicateNode{
+							Node: &ast.BinaryNode{
+								Operator: tt.wantOp,
 								Left: &ast.BinaryNode{
-									Operator: ">",
+									Operator: "and",
+									Left: &ast.BinaryNode{
+										Operator: ">",
+										Left: &ast.MemberNode{
+											Node:     &ast.PointerNode{},
+											Property: &ast.StringNode{Value: "Age"},
+										},
+										Right: &ast.IntegerNode{Value: 18},
+									},
+									Right: &ast.BinaryNode{
+										Operator: "!=",
+										Left: &ast.MemberNode{
+											Node:     &ast.PointerNode{},
+											Property: &ast.StringNode{Value: "Name"},
+										},
+										Right: &ast.StringNode{Value: "Bob"},
+									},
+								},
+								Right: &ast.BinaryNode{
+									Operator: "<",
 									Left: &ast.MemberNode{
 										Node:     &ast.PointerNode{},
 										Property: &ast.StringNode{Value: "Age"},
 									},
-									Right: &ast.IntegerNode{Value: 18},
+									Right: &ast.IntegerNode{Value: 30},
 								},
-								Right: &ast.BinaryNode{
-									Operator: "!=",
-									Left: &ast.MemberNode{
-										Node:     &ast.PointerNode{},
-										Property: &ast.StringNode{Value: "Name"},
-									},
-									Right: &ast.StringNode{Value: "Bob"},
-								},
-							},
-							Right: &ast.BinaryNode{
-								Operator: "<",
-								Left: &ast.MemberNode{
-									Node:     &ast.PointerNode{},
-									Property: &ast.StringNode{Value: "Age"},
-								},
-								Right: &ast.IntegerNode{Value: 30},
 							},
 						},
 					},
-				},
-			}
-			assert.Equal(t, ast.Dump(expected), ast.Dump(tree.Node))
-		})
+				}
+				assert.Equal(t, ast.Dump(expected), ast.Dump(tree.Node))
+			},
+		)
 	}
 }
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/expr-lang/expr/file"
+	"github.com/mvlootman/expr/file"
 )
 
 func Lex(source file.Source) ([]Token, error) {
@@ -65,11 +65,13 @@ func (l *lexer) emit(t Kind) {
 }
 
 func (l *lexer) emitValue(t Kind, value string) {
-	l.tokens = append(l.tokens, Token{
-		Location: file.Location{From: l.start, To: l.end},
-		Kind:     t,
-		Value:    value,
-	})
+	l.tokens = append(
+		l.tokens, Token{
+			Location: file.Location{From: l.start, To: l.end},
+			Kind:     t,
+			Value:    value,
+		},
+	)
 	l.commit()
 }
 
@@ -82,10 +84,12 @@ func (l *lexer) emitEOF() {
 	if to < 0 {
 		to = 0
 	}
-	l.tokens = append(l.tokens, Token{
-		Location: file.Location{From: from, To: to},
-		Kind:     EOF,
-	})
+	l.tokens = append(
+		l.tokens, Token{
+			Location: file.Location{From: from, To: to},
+			Kind:     EOF,
+		},
+	)
 	l.commit()
 }
 

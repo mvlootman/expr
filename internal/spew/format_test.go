@@ -72,7 +72,7 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/expr-lang/expr/internal/spew"
+	"github.com/mvlootman/expr/internal/spew"
 )
 
 // formatterTest is used to describe a test to be performed against NewFormatter.
@@ -782,8 +782,10 @@ func addMapFormatterTests() {
 	addFormatterTest("%+v", nv, "<nil>")
 	addFormatterTest("%+v", v, vs, vs2)
 	addFormatterTest("%+v", pv, "<*>("+vAddr+")"+vs, "<*>("+vAddr+")"+vs2)
-	addFormatterTest("%+v", &pv, "<**>("+pvAddr+"->"+vAddr+")"+vs,
-		"<**>("+pvAddr+"->"+vAddr+")"+vs2)
+	addFormatterTest(
+		"%+v", &pv, "<**>("+pvAddr+"->"+vAddr+")"+vs,
+		"<**>("+pvAddr+"->"+vAddr+")"+vs2,
+	)
 	addFormatterTest("%+v", nilMap, "<nil>")
 	addFormatterTest("%+v", nv, "<nil>")
 	addFormatterTest("%#v", v, "("+vt+")"+vs, "("+vt+")"+vs2)
@@ -792,10 +794,14 @@ func addMapFormatterTests() {
 	addFormatterTest("%#v", nilMap, "("+vt+")"+"<nil>")
 	addFormatterTest("%#v", nv, "(*"+vt+")"+"<nil>")
 	addFormatterTest("%#+v", v, "("+vt+")"+vs, "("+vt+")"+vs2)
-	addFormatterTest("%#+v", pv, "(*"+vt+")("+vAddr+")"+vs,
-		"(*"+vt+")("+vAddr+")"+vs2)
-	addFormatterTest("%#+v", &pv, "(**"+vt+")("+pvAddr+"->"+vAddr+")"+vs,
-		"(**"+vt+")("+pvAddr+"->"+vAddr+")"+vs2)
+	addFormatterTest(
+		"%#+v", pv, "(*"+vt+")("+vAddr+")"+vs,
+		"(*"+vt+")("+vAddr+")"+vs2,
+	)
+	addFormatterTest(
+		"%#+v", &pv, "(**"+vt+")("+pvAddr+"->"+vAddr+")"+vs,
+		"(**"+vt+")("+pvAddr+"->"+vAddr+")"+vs2,
+	)
 	addFormatterTest("%#+v", nilMap, "("+vt+")"+"<nil>")
 	addFormatterTest("%#+v", nv, "(*"+vt+")"+"<nil>")
 
@@ -1490,8 +1496,10 @@ func TestFormatter(t *testing.T) {
 		spew.Fprintf(buf, test.format, test.in)
 		s := buf.String()
 		if testFailed(s, test.wants) {
-			t.Errorf("Formatter #%d format: %s got: %s %s", i, test.format, s,
-				stringizeWants(test.wants))
+			t.Errorf(
+				"Formatter #%d format: %s got: %s %s", i, test.format, s,
+				stringizeWants(test.wants),
+			)
 			continue
 		}
 	}

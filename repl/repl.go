@@ -6,14 +6,14 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/expr-lang/expr/test/fuzz"
+	"github.com/mvlootman/expr/test/fuzz"
 
 	"github.com/bettercap/readline"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/builtin"
-	"github.com/expr-lang/expr/debug"
-	"github.com/expr-lang/expr/vm"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/builtin"
+	"github.com/mvlootman/expr/debug"
+	"github.com/mvlootman/expr/vm"
 )
 
 var keywords = []string{
@@ -36,11 +36,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	rl, err := readline.NewEx(&readline.Config{
-		Prompt:       "❯ ",
-		AutoComplete: completer{append(builtin.Names, keywords...)},
-		HistoryFile:  home + "/.expr_history",
-	})
+	rl, err := readline.NewEx(
+		&readline.Config{
+			Prompt:       "❯ ",
+			AutoComplete: completer{append(builtin.Names, keywords...)},
+			HistoryFile:  home + "/.expr_history",
+		},
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -141,6 +143,8 @@ func humanizeBytes(b uint64) string {
 		div *= unit
 		exp++
 	}
-	return fmt.Sprintf("%.2f %ciB",
-		float64(b)/float64(div), "KMGTPE"[exp])
+	return fmt.Sprintf(
+		"%.2f %ciB",
+		float64(b)/float64(div), "KMGTPE"[exp],
+	)
 }

@@ -7,7 +7,7 @@ import (
 	url "net/url"
 	time "time"
 
-	assert "github.com/expr-lang/expr/internal/testify/assert"
+	assert "github.com/mvlootman/expr/internal/testify/assert"
 )
 
 // Condition uses a Comparison to assert a complex condition.

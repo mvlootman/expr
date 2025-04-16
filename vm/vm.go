@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/expr-lang/expr/builtin"
-	"github.com/expr-lang/expr/conf"
-	"github.com/expr-lang/expr/file"
-	"github.com/expr-lang/expr/internal/deref"
-	"github.com/expr-lang/expr/vm/runtime"
+	"github.com/mvlootman/expr/builtin"
+	"github.com/mvlootman/expr/conf"
+	"github.com/mvlootman/expr/file"
+	"github.com/mvlootman/expr/internal/deref"
+	"github.com/mvlootman/expr/vm/runtime"
 )
 
 func Run(program *Program, env any) (any, error) {
@@ -513,11 +513,13 @@ func (vm *VM) Run(program *Program, env any) (_ any, err error) {
 				default:
 					panic("unknown order, use asc or desc")
 				}
-				vm.push(&runtime.SortBy{
-					Desc:   desc,
-					Array:  make([]any, 0, scope.Len),
-					Values: make([]any, 0, scope.Len),
-				})
+				vm.push(
+					&runtime.SortBy{
+						Desc:   desc,
+						Array:  make([]any, 0, scope.Len),
+						Values: make([]any, 0, scope.Len),
+					},
+				)
 			default:
 				panic(fmt.Sprintf("unknown OpCreate argument %v", arg))
 			}
@@ -554,10 +556,12 @@ func (vm *VM) Run(program *Program, env any) (_ any, err error) {
 		case OpBegin:
 			a := vm.pop()
 			array := reflect.ValueOf(a)
-			vm.Scopes = append(vm.Scopes, &Scope{
-				Array: array,
-				Len:   array.Len(),
-			})
+			vm.Scopes = append(
+				vm.Scopes, &Scope{
+					Array: array,
+					Len:   array.Len(),
+				},
+			)
 
 		case OpEnd:
 			vm.Scopes = vm.Scopes[:len(vm.Scopes)-1]

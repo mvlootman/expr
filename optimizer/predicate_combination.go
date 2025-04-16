@@ -1,8 +1,8 @@
 package optimizer
 
 import (
-	. "github.com/expr-lang/expr/ast"
-	"github.com/expr-lang/expr/parser/operator"
+	. "github.com/mvlootman/expr/ast"
+	"github.com/mvlootman/expr/parser/operator"
 )
 
 /*
@@ -29,13 +29,15 @@ func (v *predicateCombination) Visit(node *Node) {
 							},
 						}
 						v.Visit(&predicate.Node)
-						patchCopyType(node, &BuiltinNode{
-							Name: left.Name,
-							Arguments: []Node{
-								left.Arguments[0],
-								predicate,
+						patchCopyType(
+							node, &BuiltinNode{
+								Name: left.Name,
+								Arguments: []Node{
+									left.Arguments[0],
+									predicate,
+								},
 							},
-						})
+						)
 					}
 				}
 			}

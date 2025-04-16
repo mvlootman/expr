@@ -5,9 +5,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/expr-lang/expr/checker/nature"
-	"github.com/expr-lang/expr/conf"
-	"github.com/expr-lang/expr/internal/deref"
+	"github.com/mvlootman/expr/checker/nature"
+	"github.com/mvlootman/expr/conf"
+	"github.com/mvlootman/expr/internal/deref"
 )
 
 // Kind can be any of array, map, struct, func, string, int, float, bool or any.
@@ -38,31 +38,96 @@ type Type struct {
 var (
 	Operators = []string{"matches", "contains", "startsWith", "endsWith"}
 	Builtins  = map[Identifier]*Type{
-		"true":   {Kind: "bool"},
-		"false":  {Kind: "bool"},
-		"len":    {Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}}, Return: &Type{Kind: "int"}},
-		"all":    {Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}, {Kind: "func"}}, Return: &Type{Kind: "bool"}},
-		"none":   {Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}, {Kind: "func"}}, Return: &Type{Kind: "bool"}},
-		"any":    {Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}, {Kind: "func"}}, Return: &Type{Kind: "bool"}},
-		"one":    {Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}, {Kind: "func"}}, Return: &Type{Kind: "bool"}},
-		"filter": {Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}, {Kind: "func"}}, Return: &Type{Kind: "array", Type: &Type{Kind: "any"}}},
-		"map":    {Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}, {Kind: "func"}}, Return: &Type{Kind: "array", Type: &Type{Kind: "any"}}},
-		"count":  {Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}, {Kind: "func"}}, Return: &Type{Kind: "int"}},
+		"true":  {Kind: "bool"},
+		"false": {Kind: "bool"},
+		"len": {
+			Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}},
+			Return: &Type{Kind: "int"},
+		},
+		"all": {
+			Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}, {Kind: "func"}},
+			Return: &Type{Kind: "bool"},
+		},
+		"none": {
+			Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}, {Kind: "func"}},
+			Return: &Type{Kind: "bool"},
+		},
+		"any": {
+			Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}, {Kind: "func"}},
+			Return: &Type{Kind: "bool"},
+		},
+		"one": {
+			Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}, {Kind: "func"}},
+			Return: &Type{Kind: "bool"},
+		},
+		"filter": {
+			Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}, {Kind: "func"}},
+			Return: &Type{Kind: "array", Type: &Type{Kind: "any"}},
+		},
+		"map": {
+			Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}, {Kind: "func"}},
+			Return: &Type{Kind: "array", Type: &Type{Kind: "any"}},
+		},
+		"count": {
+			Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}, {Kind: "func"}},
+			Return: &Type{Kind: "int"},
+		},
 
-		"trim":       {Kind: "func", Arguments: []*Type{{Name: "string", Kind: "string"}, {Name: "cutstr", Kind: "string"}}, Return: &Type{Name: "string", Kind: "string"}},
-		"trimPrefix": {Kind: "func", Arguments: []*Type{{Name: "string", Kind: "string"}, {Name: "cutstr", Kind: "string"}}, Return: &Type{Name: "string", Kind: "string"}},
-		"trimSuffix": {Kind: "func", Arguments: []*Type{{Name: "string", Kind: "string"}, {Name: "cutstr", Kind: "string"}}, Return: &Type{Name: "string", Kind: "string"}},
+		"trim": {
+			Kind:      "func",
+			Arguments: []*Type{{Name: "string", Kind: "string"}, {Name: "cutstr", Kind: "string"}},
+			Return:    &Type{Name: "string", Kind: "string"},
+		},
+		"trimPrefix": {
+			Kind:      "func",
+			Arguments: []*Type{{Name: "string", Kind: "string"}, {Name: "cutstr", Kind: "string"}},
+			Return:    &Type{Name: "string", Kind: "string"},
+		},
+		"trimSuffix": {
+			Kind:      "func",
+			Arguments: []*Type{{Name: "string", Kind: "string"}, {Name: "cutstr", Kind: "string"}},
+			Return:    &Type{Name: "string", Kind: "string"},
+		},
 
-		"upper":  {Kind: "func", Arguments: []*Type{{Name: "string", Kind: "string"}}, Return: &Type{Name: "string", Kind: "string"}},
-		"lower":  {Kind: "func", Arguments: []*Type{{Name: "string", Kind: "string"}}, Return: &Type{Name: "string", Kind: "string"}},
-		"repeat": {Kind: "func", Arguments: []*Type{{Name: "n", Kind: "int"}}, Return: &Type{Name: "string", Kind: "string"}},
+		"upper": {
+			Kind: "func", Arguments: []*Type{{Name: "string", Kind: "string"}},
+			Return: &Type{Name: "string", Kind: "string"},
+		},
+		"lower": {
+			Kind: "func", Arguments: []*Type{{Name: "string", Kind: "string"}},
+			Return: &Type{Name: "string", Kind: "string"},
+		},
+		"repeat": {
+			Kind: "func", Arguments: []*Type{{Name: "n", Kind: "int"}},
+			Return: &Type{Name: "string", Kind: "string"},
+		},
 
-		"join":        {Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}, {Name: "glue", Kind: "string"}}, Return: &Type{Name: "string", Kind: "string"}},
-		"indexOf":     {Kind: "func", Arguments: []*Type{{Name: "string", Kind: "string"}, {Name: "substr", Kind: "string"}}, Return: &Type{Name: "index", Kind: "int"}},
-		"lastIndexOf": {Kind: "func", Arguments: []*Type{{Name: "string", Kind: "string"}, {Name: "substr", Kind: "string"}}, Return: &Type{Name: "index", Kind: "int"}},
+		"join": {
+			Kind: "func", Arguments: []*Type{
+				{Kind: "array", Type: &Type{Kind: "any"}}, {Name: "glue", Kind: "string"},
+			}, Return: &Type{Name: "string", Kind: "string"},
+		},
+		"indexOf": {
+			Kind:      "func",
+			Arguments: []*Type{{Name: "string", Kind: "string"}, {Name: "substr", Kind: "string"}},
+			Return:    &Type{Name: "index", Kind: "int"},
+		},
+		"lastIndexOf": {
+			Kind:      "func",
+			Arguments: []*Type{{Name: "string", Kind: "string"}, {Name: "substr", Kind: "string"}},
+			Return:    &Type{Name: "index", Kind: "int"},
+		},
 
-		"hasPrefix": {Kind: "func", Arguments: []*Type{{Name: "string", Kind: "string"}, {Name: "prefix", Kind: "string"}}, Return: &Type{Kind: "bool"}},
-		"hasSuffix": {Kind: "func", Arguments: []*Type{{Name: "string", Kind: "string"}, {Name: "prefix", Kind: "string"}}, Return: &Type{Kind: "bool"}},
+		"hasPrefix": {
+			Kind:      "func",
+			Arguments: []*Type{{Name: "string", Kind: "string"}, {Name: "prefix", Kind: "string"}},
+			Return:    &Type{Kind: "bool"},
+		},
+		"hasSuffix": {
+			Kind:      "func",
+			Arguments: []*Type{{Name: "string", Kind: "string"}, {Name: "prefix", Kind: "string"}},
+			Return:    &Type{Kind: "bool"},
+		},
 
 		"toJSON":   {Kind: "func", Arguments: []*Type{{Kind: "any"}}, Return: &Type{Kind: "string"}},
 		"fromJSON": {Kind: "func", Arguments: []*Type{{Kind: "string"}}, Return: &Type{Kind: "any"}},
@@ -70,8 +135,14 @@ var (
 		"toBase64":   {Kind: "func", Arguments: []*Type{{Kind: "string"}}, Return: &Type{Kind: "string"}},
 		"fromBase64": {Kind: "func", Arguments: []*Type{{Kind: "string"}}, Return: &Type{Kind: "string"}},
 
-		"first": {Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}}, Return: &Type{Kind: "any"}},
-		"last":  {Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}}, Return: &Type{Kind: "any"}},
+		"first": {
+			Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}},
+			Return: &Type{Kind: "any"},
+		},
+		"last": {
+			Kind: "func", Arguments: []*Type{{Kind: "array", Type: &Type{Kind: "any"}}},
+			Return: &Type{Kind: "any"},
+		},
 
 		"now":      {Kind: "func", Return: &Type{Name: "time.Time", Kind: "struct"}},
 		"duration": {Kind: "func", Arguments: []*Type{{Kind: "string"}}, Return: &Type{Kind: "time.Duration"}},

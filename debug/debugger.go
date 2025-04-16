@@ -10,7 +10,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
-	. "github.com/expr-lang/expr/vm"
+	. "github.com/mvlootman/expr/vm"
 )
 
 func StartDebugger(program *Program, env any) {
@@ -38,24 +38,26 @@ func StartDebugger(program *Program, env any) {
 	go func() {
 		out, err := vm.Run(program, env)
 		done = true
-		app.QueueUpdateDraw(func() {
-			sub.RemoveItem(stack)
-			sub.RemoveItem(scope)
-			result := tview.NewTextView()
-			result.
-				SetBorder(true).
-				SetTitle("Output")
-			result.SetText(fmt.Sprintf("%#v", out))
-			sub.AddItem(result, 0, 1, false)
-			if err != nil {
-				errorView := tview.NewTextView()
-				errorView.
+		app.QueueUpdateDraw(
+			func() {
+				sub.RemoveItem(stack)
+				sub.RemoveItem(scope)
+				result := tview.NewTextView()
+				result.
 					SetBorder(true).
-					SetTitle("Error")
-				errorView.SetText(err.Error())
-				sub.AddItem(errorView, 0, 1, false)
-			}
-		})
+					SetTitle("Output")
+				result.SetText(fmt.Sprintf("%#v", out))
+				sub.AddItem(result, 0, 1, false)
+				if err != nil {
+					errorView := tview.NewTextView()
+					errorView.
+						SetBorder(true).
+						SetTitle("Error")
+					errorView.SetText(err.Error())
+					sub.AddItem(errorView, 0, 1, false)
+				}
+			},
+		)
 	}()
 
 	index := make(map[int]int)
@@ -83,68 +85,70 @@ func StartDebugger(program *Program, env any) {
 	}
 
 	draw := func(ip int) {
-		app.QueueUpdateDraw(func() {
-			for row := 0; row < table.GetRowCount(); row++ {
-				for col := 0; col < table.GetColumnCount(); col++ {
-					table.GetCell(row, col).SetBackgroundColor(tcell.ColorBlack)
+		app.QueueUpdateDraw(
+			func() {
+				for row := 0; row < table.GetRowCount(); row++ {
+					for col := 0; col < table.GetColumnCount(); col++ {
+						table.GetCell(row, col).SetBackgroundColor(tcell.ColorBlack)
+					}
 				}
-			}
 
-			if row, ok := index[ip]; ok {
-				table.Select(row, 0)
-				for col := 0; col < 5; col++ {
-					table.GetCell(row, col).SetBackgroundColor(tcell.ColorMediumBlue)
-				}
-				table.SetOffset(row-10, 0)
+				if row, ok := index[ip]; ok {
+					table.Select(row, 0)
+					for col := 0; col < 5; col++ {
+						table.GetCell(row, col).SetBackgroundColor(tcell.ColorMediumBlue)
+					}
+					table.SetOffset(row-10, 0)
 
-				opcode := table.GetCell(row, 1).Text
-				if strings.HasPrefix(opcode, "OpJump") {
-					jump := table.GetCell(row, 3).Text
-					jump = strings.Trim(jump, "()")
-					ip, err := strconv.Atoi(jump)
-					if err == nil {
-						if row, ok := index[ip]; ok {
-							for col := 0; col < 5; col++ {
-								table.GetCell(row, col).SetBackgroundColor(tcell.ColorDimGrey)
+					opcode := table.GetCell(row, 1).Text
+					if strings.HasPrefix(opcode, "OpJump") {
+						jump := table.GetCell(row, 3).Text
+						jump = strings.Trim(jump, "()")
+						ip, err := strconv.Atoi(jump)
+						if err == nil {
+							if row, ok := index[ip]; ok {
+								for col := 0; col < 5; col++ {
+									table.GetCell(row, col).SetBackgroundColor(tcell.ColorDimGrey)
+								}
 							}
 						}
 					}
 				}
-			}
 
-			stack.Clear()
-			for i, value := range vm.Stack {
-				stack.SetCellSimple(i, 0, fmt.Sprintf("% *d: ", 2, i))
-				stack.SetCellSimple(i, 1, fmt.Sprintf("%#v", value))
-			}
-			stack.ScrollToEnd()
+				stack.Clear()
+				for i, value := range vm.Stack {
+					stack.SetCellSimple(i, 0, fmt.Sprintf("% *d: ", 2, i))
+					stack.SetCellSimple(i, 1, fmt.Sprintf("%#v", value))
+				}
+				stack.ScrollToEnd()
 
-			scope.Clear()
-			var s *Scope
-			if len(vm.Scopes) > 0 {
-				s = vm.Scopes[len(vm.Scopes)-1]
-			}
-			if s != nil {
-				type pair struct {
-					key   string
-					value any
+				scope.Clear()
+				var s *Scope
+				if len(vm.Scopes) > 0 {
+					s = vm.Scopes[len(vm.Scopes)-1]
 				}
-				var keys []pair
-				keys = append(keys, pair{"Array", s.Array})
-				keys = append(keys, pair{"Index", s.Index})
-				keys = append(keys, pair{"Len", s.Len})
-				keys = append(keys, pair{"Count", s.Count})
-				if s.Acc != nil {
-					keys = append(keys, pair{"Acc", s.Acc})
+				if s != nil {
+					type pair struct {
+						key   string
+						value any
+					}
+					var keys []pair
+					keys = append(keys, pair{"Array", s.Array})
+					keys = append(keys, pair{"Index", s.Index})
+					keys = append(keys, pair{"Len", s.Len})
+					keys = append(keys, pair{"Count", s.Count})
+					if s.Acc != nil {
+						keys = append(keys, pair{"Acc", s.Acc})
+					}
+					row := 0
+					for _, pair := range keys {
+						scope.SetCellSimple(row, 0, fmt.Sprintf("%v: ", pair.key))
+						scope.SetCellSimple(row, 1, fmt.Sprintf("%v", pair.value))
+						row++
+					}
 				}
-				row := 0
-				for _, pair := range keys {
-					scope.SetCellSimple(row, 0, fmt.Sprintf("%v: ", pair.key))
-					scope.SetCellSimple(row, 1, fmt.Sprintf("%v", pair.value))
-					row++
-				}
-			}
-		})
+			},
+		)
 	}
 
 	getSelectedPosition := func() int {
@@ -175,23 +179,25 @@ func StartDebugger(program *Program, env any) {
 		}
 	}()
 
-	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyDown || event.Key() == tcell.KeyUp {
-			table.SetSelectable(true, false)
-		}
-		if event.Key() == tcell.KeyEnter {
-			selectable, _ := table.GetSelectable()
-			if selectable {
-				table.SetSelectable(false, false)
-				breakpoint = getSelectedPosition()
-				autostep = true
+	app.SetInputCapture(
+		func(event *tcell.EventKey) *tcell.EventKey {
+			if event.Key() == tcell.KeyDown || event.Key() == tcell.KeyUp {
+				table.SetSelectable(true, false)
 			}
-			if !done {
-				vm.Step()
+			if event.Key() == tcell.KeyEnter {
+				selectable, _ := table.GetSelectable()
+				if selectable {
+					table.SetSelectable(false, false)
+					breakpoint = getSelectedPosition()
+					autostep = true
+				}
+				if !done {
+					vm.Step()
+				}
 			}
-		}
-		return event
-	})
+			return event
+		},
+	)
 
 	err := app.Run()
 	check(err)

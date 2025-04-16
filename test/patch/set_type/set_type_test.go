@@ -4,10 +4,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/ast"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/ast"
 )
 
 func TestPatch_SetType(t *testing.T) {

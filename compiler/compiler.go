@@ -6,15 +6,15 @@ import (
 	"reflect"
 	"regexp"
 
-	"github.com/expr-lang/expr/ast"
-	"github.com/expr-lang/expr/builtin"
-	"github.com/expr-lang/expr/checker"
-	. "github.com/expr-lang/expr/checker/nature"
-	"github.com/expr-lang/expr/conf"
-	"github.com/expr-lang/expr/file"
-	"github.com/expr-lang/expr/parser"
-	. "github.com/expr-lang/expr/vm"
-	"github.com/expr-lang/expr/vm/runtime"
+	"github.com/mvlootman/expr/ast"
+	"github.com/mvlootman/expr/builtin"
+	"github.com/mvlootman/expr/checker"
+	. "github.com/mvlootman/expr/checker/nature"
+	"github.com/mvlootman/expr/conf"
+	"github.com/mvlootman/expr/file"
+	"github.com/mvlootman/expr/parser"
+	. "github.com/mvlootman/expr/vm"
+	"github.com/mvlootman/expr/vm/runtime"
 )
 
 const (
@@ -303,15 +303,23 @@ func (c *compiler) IdentifierNode(node *ast.IdentifierNode) {
 	if env.IsFastMap() {
 		c.emit(OpLoadFast, c.addConstant(node.Value))
 	} else if ok, index, name := checker.FieldIndex(env, node); ok {
-		c.emit(OpLoadField, c.addConstant(&runtime.Field{
-			Index: index,
-			Path:  []string{name},
-		}))
+		c.emit(
+			OpLoadField, c.addConstant(
+				&runtime.Field{
+					Index: index,
+					Path:  []string{name},
+				},
+			),
+		)
 	} else if ok, index, name := checker.MethodIndex(env, node); ok {
-		c.emit(OpLoadMethod, c.addConstant(&runtime.Method{
-			Name:  name,
-			Index: index,
-		}))
+		c.emit(
+			OpLoadMethod, c.addConstant(
+				&runtime.Method{
+					Name:  name,
+					Index: index,
+				},
+			),
+		)
 	} else {
 		c.emit(OpLoadConst, c.addConstant(node.Value))
 	}
@@ -655,10 +663,14 @@ func (c *compiler) MemberNode(node *ast.MemberNode) {
 
 	if ok, index, name := checker.MethodIndex(env, node); ok {
 		c.compile(node.Node)
-		c.emit(OpMethod, c.addConstant(&runtime.Method{
-			Name:  name,
-			Index: index,
-		}))
+		c.emit(
+			OpMethod, c.addConstant(
+				&runtime.Method{
+					Name:  name,
+					Index: index,
+				},
+			),
+		)
 		return
 	}
 	op := OpFetch
@@ -674,9 +686,11 @@ func (c *compiler) MemberNode(node *ast.MemberNode) {
 				if ok, identIndex, name := checker.FieldIndex(env, ident); ok {
 					index = append(identIndex, index...)
 					path = append([]string{name}, path...)
-					c.emitLocation(ident.Location(), OpLoadField, c.addConstant(
-						&runtime.Field{Index: index, Path: path},
-					))
+					c.emitLocation(
+						ident.Location(), OpLoadField, c.addConstant(
+							&runtime.Field{Index: index, Path: path},
+						),
+					)
 					return
 				}
 			}
@@ -708,9 +722,11 @@ func (c *compiler) MemberNode(node *ast.MemberNode) {
 		c.compile(node.Property)
 		c.emit(OpFetch)
 	} else {
-		c.emitLocation(node.Location(), op, c.addConstant(
-			&runtime.Field{Index: index, Path: path},
-		))
+		c.emitLocation(
+			node.Location(), op, c.addConstant(
+				&runtime.Field{Index: index, Path: path},
+			),
+		)
 	}
 }
 
@@ -798,11 +814,13 @@ func (c *compiler) BuiltinNode(node *ast.BuiltinNode) {
 		c.derefInNeeded(node.Arguments[0])
 		c.emit(OpBegin)
 		var loopBreak int
-		c.emitLoop(func() {
-			c.compile(node.Arguments[1])
-			loopBreak = c.emit(OpJumpIfFalse, placeholder)
-			c.emit(OpPop)
-		})
+		c.emitLoop(
+			func() {
+				c.compile(node.Arguments[1])
+				loopBreak = c.emit(OpJumpIfFalse, placeholder)
+				c.emit(OpPop)
+			},
+		)
 		c.emit(OpTrue)
 		c.patchJump(loopBreak)
 		c.emit(OpEnd)
@@ -813,12 +831,14 @@ func (c *compiler) BuiltinNode(node *ast.BuiltinNode) {
 		c.derefInNeeded(node.Arguments[0])
 		c.emit(OpBegin)
 		var loopBreak int
-		c.emitLoop(func() {
-			c.compile(node.Arguments[1])
-			c.emit(OpNot)
-			loopBreak = c.emit(OpJumpIfFalse, placeholder)
-			c.emit(OpPop)
-		})
+		c.emitLoop(
+			func() {
+				c.compile(node.Arguments[1])
+				c.emit(OpNot)
+				loopBreak = c.emit(OpJumpIfFalse, placeholder)
+				c.emit(OpPop)
+			},
+		)
 		c.emit(OpTrue)
 		c.patchJump(loopBreak)
 		c.emit(OpEnd)
@@ -829,11 +849,13 @@ func (c *compiler) BuiltinNode(node *ast.BuiltinNode) {
 		c.derefInNeeded(node.Arguments[0])
 		c.emit(OpBegin)
 		var loopBreak int
-		c.emitLoop(func() {
-			c.compile(node.Arguments[1])
-			loopBreak = c.emit(OpJumpIfTrue, placeholder)
-			c.emit(OpPop)
-		})
+		c.emitLoop(
+			func() {
+				c.compile(node.Arguments[1])
+				loopBreak = c.emit(OpJumpIfTrue, placeholder)
+				c.emit(OpPop)
+			},
+		)
 		c.emit(OpFalse)
 		c.patchJump(loopBreak)
 		c.emit(OpEnd)
@@ -843,12 +865,16 @@ func (c *compiler) BuiltinNode(node *ast.BuiltinNode) {
 		c.compile(node.Arguments[0])
 		c.derefInNeeded(node.Arguments[0])
 		c.emit(OpBegin)
-		c.emitLoop(func() {
-			c.compile(node.Arguments[1])
-			c.emitCond(func() {
-				c.emit(OpIncrementCount)
-			})
-		})
+		c.emitLoop(
+			func() {
+				c.compile(node.Arguments[1])
+				c.emitCond(
+					func() {
+						c.emit(OpIncrementCount)
+					},
+				)
+			},
+		)
 		c.emit(OpGetCount)
 		c.emitPush(1)
 		c.emit(OpEqual)
@@ -859,17 +885,21 @@ func (c *compiler) BuiltinNode(node *ast.BuiltinNode) {
 		c.compile(node.Arguments[0])
 		c.derefInNeeded(node.Arguments[0])
 		c.emit(OpBegin)
-		c.emitLoop(func() {
-			c.compile(node.Arguments[1])
-			c.emitCond(func() {
-				c.emit(OpIncrementCount)
-				if node.Map != nil {
-					c.compile(node.Map)
-				} else {
-					c.emit(OpPointer)
-				}
-			})
-		})
+		c.emitLoop(
+			func() {
+				c.compile(node.Arguments[1])
+				c.emitCond(
+					func() {
+						c.emit(OpIncrementCount)
+						if node.Map != nil {
+							c.compile(node.Map)
+						} else {
+							c.emit(OpPointer)
+						}
+					},
+				)
+			},
+		)
 		c.emit(OpGetCount)
 		c.emit(OpEnd)
 		c.emit(OpArray)
@@ -879,9 +909,11 @@ func (c *compiler) BuiltinNode(node *ast.BuiltinNode) {
 		c.compile(node.Arguments[0])
 		c.derefInNeeded(node.Arguments[0])
 		c.emit(OpBegin)
-		c.emitLoop(func() {
-			c.compile(node.Arguments[1])
-		})
+		c.emitLoop(
+			func() {
+				c.compile(node.Arguments[1])
+			},
+		)
 		c.emit(OpGetLen)
 		c.emit(OpEnd)
 		c.emit(OpArray)
@@ -891,16 +923,20 @@ func (c *compiler) BuiltinNode(node *ast.BuiltinNode) {
 		c.compile(node.Arguments[0])
 		c.derefInNeeded(node.Arguments[0])
 		c.emit(OpBegin)
-		c.emitLoop(func() {
-			if len(node.Arguments) == 2 {
-				c.compile(node.Arguments[1])
-			} else {
-				c.emit(OpPointer)
-			}
-			c.emitCond(func() {
-				c.emit(OpIncrementCount)
-			})
-		})
+		c.emitLoop(
+			func() {
+				if len(node.Arguments) == 2 {
+					c.compile(node.Arguments[1])
+				} else {
+					c.emit(OpPointer)
+				}
+				c.emitCond(
+					func() {
+						c.emit(OpIncrementCount)
+					},
+				)
+			},
+		)
 		c.emit(OpGetCount)
 		c.emit(OpEnd)
 		return
@@ -911,16 +947,18 @@ func (c *compiler) BuiltinNode(node *ast.BuiltinNode) {
 		c.emit(OpBegin)
 		c.emit(OpInt, 0)
 		c.emit(OpSetAcc)
-		c.emitLoop(func() {
-			if len(node.Arguments) == 2 {
-				c.compile(node.Arguments[1])
-			} else {
-				c.emit(OpPointer)
-			}
-			c.emit(OpGetAcc)
-			c.emit(OpAdd)
-			c.emit(OpSetAcc)
-		})
+		c.emitLoop(
+			func() {
+				if len(node.Arguments) == 2 {
+					c.compile(node.Arguments[1])
+				} else {
+					c.emit(OpPointer)
+				}
+				c.emit(OpGetAcc)
+				c.emit(OpAdd)
+				c.emit(OpSetAcc)
+			},
+		)
 		c.emit(OpGetAcc)
 		c.emit(OpEnd)
 		return
@@ -930,19 +968,21 @@ func (c *compiler) BuiltinNode(node *ast.BuiltinNode) {
 		c.derefInNeeded(node.Arguments[0])
 		c.emit(OpBegin)
 		var loopBreak int
-		c.emitLoop(func() {
-			c.compile(node.Arguments[1])
-			noop := c.emit(OpJumpIfFalse, placeholder)
-			c.emit(OpPop)
-			if node.Map != nil {
-				c.compile(node.Map)
-			} else {
-				c.emit(OpPointer)
-			}
-			loopBreak = c.emit(OpJump, placeholder)
-			c.patchJump(noop)
-			c.emit(OpPop)
-		})
+		c.emitLoop(
+			func() {
+				c.compile(node.Arguments[1])
+				noop := c.emit(OpJumpIfFalse, placeholder)
+				c.emit(OpPop)
+				if node.Map != nil {
+					c.compile(node.Map)
+				} else {
+					c.emit(OpPointer)
+				}
+				loopBreak = c.emit(OpJump, placeholder)
+				c.patchJump(noop)
+				c.emit(OpPop)
+			},
+		)
 		if node.Throws {
 			c.emit(OpPush, c.addConstant(fmt.Errorf("reflect: slice index out of range")))
 			c.emit(OpThrow)
@@ -958,15 +998,17 @@ func (c *compiler) BuiltinNode(node *ast.BuiltinNode) {
 		c.derefInNeeded(node.Arguments[0])
 		c.emit(OpBegin)
 		var loopBreak int
-		c.emitLoop(func() {
-			c.compile(node.Arguments[1])
-			noop := c.emit(OpJumpIfFalse, placeholder)
-			c.emit(OpPop)
-			c.emit(OpGetIndex)
-			loopBreak = c.emit(OpJump, placeholder)
-			c.patchJump(noop)
-			c.emit(OpPop)
-		})
+		c.emitLoop(
+			func() {
+				c.compile(node.Arguments[1])
+				noop := c.emit(OpJumpIfFalse, placeholder)
+				c.emit(OpPop)
+				c.emit(OpGetIndex)
+				loopBreak = c.emit(OpJump, placeholder)
+				c.patchJump(noop)
+				c.emit(OpPop)
+			},
+		)
 		c.emit(OpNil)
 		c.patchJump(loopBreak)
 		c.emit(OpEnd)
@@ -977,19 +1019,21 @@ func (c *compiler) BuiltinNode(node *ast.BuiltinNode) {
 		c.derefInNeeded(node.Arguments[0])
 		c.emit(OpBegin)
 		var loopBreak int
-		c.emitLoopBackwards(func() {
-			c.compile(node.Arguments[1])
-			noop := c.emit(OpJumpIfFalse, placeholder)
-			c.emit(OpPop)
-			if node.Map != nil {
-				c.compile(node.Map)
-			} else {
-				c.emit(OpPointer)
-			}
-			loopBreak = c.emit(OpJump, placeholder)
-			c.patchJump(noop)
-			c.emit(OpPop)
-		})
+		c.emitLoopBackwards(
+			func() {
+				c.compile(node.Arguments[1])
+				noop := c.emit(OpJumpIfFalse, placeholder)
+				c.emit(OpPop)
+				if node.Map != nil {
+					c.compile(node.Map)
+				} else {
+					c.emit(OpPointer)
+				}
+				loopBreak = c.emit(OpJump, placeholder)
+				c.patchJump(noop)
+				c.emit(OpPop)
+			},
+		)
 		if node.Throws {
 			c.emit(OpPush, c.addConstant(fmt.Errorf("reflect: slice index out of range")))
 			c.emit(OpThrow)
@@ -1005,15 +1049,17 @@ func (c *compiler) BuiltinNode(node *ast.BuiltinNode) {
 		c.derefInNeeded(node.Arguments[0])
 		c.emit(OpBegin)
 		var loopBreak int
-		c.emitLoopBackwards(func() {
-			c.compile(node.Arguments[1])
-			noop := c.emit(OpJumpIfFalse, placeholder)
-			c.emit(OpPop)
-			c.emit(OpGetIndex)
-			loopBreak = c.emit(OpJump, placeholder)
-			c.patchJump(noop)
-			c.emit(OpPop)
-		})
+		c.emitLoopBackwards(
+			func() {
+				c.compile(node.Arguments[1])
+				noop := c.emit(OpJumpIfFalse, placeholder)
+				c.emit(OpPop)
+				c.emit(OpGetIndex)
+				loopBreak = c.emit(OpJump, placeholder)
+				c.patchJump(noop)
+				c.emit(OpPop)
+			},
+		)
 		c.emit(OpNil)
 		c.patchJump(loopBreak)
 		c.emit(OpEnd)
@@ -1025,10 +1071,12 @@ func (c *compiler) BuiltinNode(node *ast.BuiltinNode) {
 		c.emit(OpBegin)
 		c.emit(OpCreate, 1)
 		c.emit(OpSetAcc)
-		c.emitLoop(func() {
-			c.compile(node.Arguments[1])
-			c.emit(OpGroupBy)
-		})
+		c.emitLoop(
+			func() {
+				c.compile(node.Arguments[1])
+				c.emit(OpGroupBy)
+			},
+		)
 		c.emit(OpGetAcc)
 		c.emit(OpEnd)
 		return
@@ -1044,10 +1092,12 @@ func (c *compiler) BuiltinNode(node *ast.BuiltinNode) {
 		}
 		c.emit(OpCreate, 2)
 		c.emit(OpSetAcc)
-		c.emitLoop(func() {
-			c.compile(node.Arguments[1])
-			c.emit(OpSortBy)
-		})
+		c.emitLoop(
+			func() {
+				c.compile(node.Arguments[1])
+				c.emit(OpSortBy)
+			},
+		)
 		c.emit(OpSort)
 		c.emit(OpEnd)
 		return
@@ -1065,10 +1115,12 @@ func (c *compiler) BuiltinNode(node *ast.BuiltinNode) {
 			c.emit(OpIncrementIndex)
 			c.emit(OpSetAcc)
 		}
-		c.emitLoop(func() {
-			c.compile(node.Arguments[1])
-			c.emit(OpSetAcc)
-		})
+		c.emitLoop(
+			func() {
+				c.compile(node.Arguments[1])
+				c.emit(OpSetAcc)
+			},
+		)
 		c.emit(OpGetAcc)
 		c.emit(OpEnd)
 		return

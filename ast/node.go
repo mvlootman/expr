@@ -4,8 +4,8 @@ import (
 	"github.com/shopspring/decimal"
 	"reflect"
 
-	"github.com/expr-lang/expr/checker/nature"
-	"github.com/expr-lang/expr/file"
+	"github.com/mvlootman/expr/checker/nature"
+	"github.com/mvlootman/expr/file"
 )
 
 var (

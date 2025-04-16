@@ -1,7 +1,7 @@
 package optimizer
 
 import (
-	. "github.com/expr-lang/expr/ast"
+	. "github.com/mvlootman/expr/ast"
 )
 
 type sumMap struct{}
@@ -13,13 +13,15 @@ func (*sumMap) Visit(node *Node) {
 		if mapBuiltin, ok := sumBuiltin.Arguments[0].(*BuiltinNode); ok &&
 			mapBuiltin.Name == "map" &&
 			len(mapBuiltin.Arguments) == 2 {
-			patchCopyType(node, &BuiltinNode{
-				Name: "sum",
-				Arguments: []Node{
-					mapBuiltin.Arguments[0],
-					mapBuiltin.Arguments[1],
+			patchCopyType(
+				node, &BuiltinNode{
+					Name: "sum",
+					Arguments: []Node{
+						mapBuiltin.Arguments[0],
+						mapBuiltin.Arguments[1],
+					},
 				},
-			})
+			)
 		}
 	}
 }

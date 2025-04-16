@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/test/crowdsec"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/test/crowdsec"
 )
 
 func TestCrowdsec(t *testing.T) {
@@ -40,9 +40,11 @@ func TestCrowdsec(t *testing.T) {
 	}
 
 	for _, line := range examples {
-		t.Run(line, func(t *testing.T) {
-			_, err = expr.Compile(line, opt...)
-			require.NoError(t, err)
-		})
+		t.Run(
+			line, func(t *testing.T) {
+				_, err = expr.Compile(line, opt...)
+				require.NoError(t, err)
+			},
+		)
 	}
 }

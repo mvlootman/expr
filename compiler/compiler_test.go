@@ -4,14 +4,14 @@ import (
 	"math"
 	"testing"
 
-	"github.com/expr-lang/expr/internal/testify/assert"
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/assert"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/test/mock"
-	"github.com/expr-lang/expr/test/playground"
-	"github.com/expr-lang/expr/vm"
-	"github.com/expr-lang/expr/vm/runtime"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/test/mock"
+	"github.com/mvlootman/expr/test/playground"
+	"github.com/mvlootman/expr/vm"
+	"github.com/mvlootman/expr/vm/runtime"
 )
 
 type B struct {
@@ -398,12 +398,14 @@ func TestCompile(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.code, func(t *testing.T) {
-			program, err := expr.Compile(test.code, expr.Env(Env{}), expr.Optimize(false))
-			require.NoError(t, err)
+		t.Run(
+			test.code, func(t *testing.T) {
+				program, err := expr.Compile(test.code, expr.Env(Env{}), expr.Optimize(false))
+				require.NoError(t, err)
 
-			assert.Equal(t, test.want.Disassemble(), program.Disassemble())
-		})
+				assert.Equal(t, test.want.Disassemble(), program.Disassemble())
+			},
+		)
 	}
 }
 
@@ -415,10 +417,12 @@ func TestCompile_panic(t *testing.T) {
 		`Authors.IsZero(nil * Authors) - (TotalViews && Posts ? nil : nil)[TotalViews.IsZero(false, " ").IsZero(Authors)]`,
 	}
 	for _, test := range tests {
-		t.Run(test, func(t *testing.T) {
-			_, err := expr.Compile(test, expr.Env(playground.Blog{}))
-			require.Error(t, err)
-		})
+		t.Run(
+			test, func(t *testing.T) {
+				_, err := expr.Compile(test, expr.Env(playground.Blog{}))
+				require.Error(t, err)
+			},
+		)
 	}
 }
 
@@ -637,11 +641,13 @@ func TestCompile_optimizes_jumps(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.code, func(t *testing.T) {
-			program, err := expr.Compile(test.code, expr.Env(env))
-			require.NoError(t, err)
-			require.Equal(t, test.want, program.Disassemble())
-		})
+		t.Run(
+			test.code, func(t *testing.T) {
+				program, err := expr.Compile(test.code, expr.Env(env))
+				require.NoError(t, err)
+				require.Equal(t, test.want, program.Disassemble())
+			},
+		)
 	}
 }
 
@@ -660,10 +666,12 @@ func TestCompile_IntegerArgsFunc(t *testing.T) {
 		{"FuncUint64(0)"},
 	}
 	for _, tt := range tests {
-		t.Run(tt.code, func(t *testing.T) {
-			_, err := expr.Compile(tt.code, expr.Env(env))
-			require.NoError(t, err)
-		})
+		t.Run(
+			tt.code, func(t *testing.T) {
+				_, err := expr.Compile(tt.code, expr.Env(env))
+				require.NoError(t, err)
+			},
+		)
 	}
 }
 

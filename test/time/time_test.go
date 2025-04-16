@@ -5,14 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/expr-lang/expr/internal/testify/require"
+	"github.com/mvlootman/expr/internal/testify/require"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/checker"
-	"github.com/expr-lang/expr/compiler"
-	"github.com/expr-lang/expr/conf"
-	"github.com/expr-lang/expr/parser"
-	"github.com/expr-lang/expr/vm"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/checker"
+	"github.com/mvlootman/expr/compiler"
+	"github.com/mvlootman/expr/conf"
+	"github.com/mvlootman/expr/parser"
+	"github.com/mvlootman/expr/vm"
 )
 
 func TestTime(t *testing.T) {
@@ -71,35 +71,37 @@ func TestTime(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(fmt.Sprintf("time helper test `%T %s %T`", tt.a, tt.op, tt.b), func(t *testing.T) {
-			input := fmt.Sprintf("a %v b", tt.op)
-			env := map[string]any{
-				"a": tt.a,
-				"b": tt.b,
-			}
+		t.Run(
+			fmt.Sprintf("time helper test `%T %s %T`", tt.a, tt.op, tt.b), func(t *testing.T) {
+				input := fmt.Sprintf("a %v b", tt.op)
+				env := map[string]any{
+					"a": tt.a,
+					"b": tt.b,
+				}
 
-			config := conf.CreateNew()
+				config := conf.CreateNew()
 
-			tree, err := parser.Parse(input)
-			require.NoError(t, err)
-
-			_, err = checker.Check(tree, config)
-			require.NoError(t, err)
-
-			program, err := compiler.Compile(tree, config)
-			require.NoError(t, err)
-
-			got, err := vm.Run(program, env)
-			if tt.wantErr {
-				require.Error(t, err)
-			} else {
+				tree, err := parser.Parse(input)
 				require.NoError(t, err)
 
-				if tt.want != nil {
-					require.Equal(t, tt.want, got)
+				_, err = checker.Check(tree, config)
+				require.NoError(t, err)
+
+				program, err := compiler.Compile(tree, config)
+				require.NoError(t, err)
+
+				got, err := vm.Run(program, env)
+				if tt.wantErr {
+					require.Error(t, err)
+				} else {
+					require.NoError(t, err)
+
+					if tt.want != nil {
+						require.Equal(t, tt.want, got)
+					}
 				}
-			}
-		})
+			},
+		)
 	}
 }
 
@@ -134,13 +136,15 @@ func TestTime_date(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			program, err := expr.Compile(test.input)
-			require.NoError(t, err)
+		t.Run(
+			test.input, func(t *testing.T) {
+				program, err := expr.Compile(test.input)
+				require.NoError(t, err)
 
-			output, err := expr.Run(program, nil)
-			require.NoError(t, err)
-			require.Truef(t, test.want.Equal(output.(time.Time)), "want %v, got %v", test.want, output)
-		})
+				output, err := expr.Run(program, nil)
+				require.NoError(t, err)
+				require.Truef(t, test.want.Equal(output.(time.Time)), "want %v, got %v", test.want, output)
+			},
+		)
 	}
 }

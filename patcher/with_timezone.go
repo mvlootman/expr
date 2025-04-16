@@ -3,7 +3,7 @@ package patcher
 import (
 	"time"
 
-	"github.com/expr-lang/expr/ast"
+	"github.com/mvlootman/expr/ast"
 )
 
 // WithTimezone passes Location to date() and now() functions.
@@ -16,10 +16,12 @@ func (t WithTimezone) Visit(node *ast.Node) {
 		switch btin.Name {
 		case "date", "now":
 			loc := &ast.ConstantNode{Value: t.Location}
-			ast.Patch(node, &ast.BuiltinNode{
-				Name:      btin.Name,
-				Arguments: append([]ast.Node{loc}, btin.Arguments...),
-			})
+			ast.Patch(
+				node, &ast.BuiltinNode{
+					Name:      btin.Name,
+					Arguments: append([]ast.Node{loc}, btin.Arguments...),
+				},
+			)
 		}
 	}
 }

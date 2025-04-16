@@ -1,3 +1,4 @@
+.idea
 *.exe
 *.exe~
 *.dll
@@ -9,3 +10,4 @@
 custom_tests.json
 pro/
 test/avs/
+/vendor/

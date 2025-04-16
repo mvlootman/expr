@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/builtin"
+	"github.com/mvlootman/expr"
+	"github.com/mvlootman/expr/builtin"
 )
 
 var (
@@ -98,16 +98,20 @@ func main() {
 			for {
 				var code string
 
-				code = node(oneOf(list[int]{
-					{3, 100},
-					{4, 40},
-					{5, 50},
-					{6, 30},
-					{7, 20},
-					{8, 10},
-					{9, 5},
-					{10, 5},
-				}))
+				code = node(
+					oneOf(
+						list[int]{
+							{3, 100},
+							{4, 40},
+							{5, 50},
+							{6, 30},
+							{7, 20},
+							{8, 10},
+							{9, 5},
+							{10, 5},
+						},
+					),
+				)
 
 				program, err := expr.Compile(code, expr.Env(Env))
 				if err != nil {
@@ -138,34 +142,38 @@ type fn func(depth int) string
 
 func node(depth int) string {
 	if depth <= 0 {
-		return oneOf(list[fn]{
-			{nilNode, 1},
-			{envNode, 1},
-			{floatNode, 1},
-			{integerNode, 1},
-			{stringNode, 1},
-			{booleanNode, 1},
-			{identifierNode, 10},
-			{pointerNode, 10},
-		})(depth - 1)
+		return oneOf(
+			list[fn]{
+				{nilNode, 1},
+				{envNode, 1},
+				{floatNode, 1},
+				{integerNode, 1},
+				{stringNode, 1},
+				{booleanNode, 1},
+				{identifierNode, 10},
+				{pointerNode, 10},
+			},
+		)(depth - 1)
 	}
-	return oneOf(list[fn]{
-		{sequenceNode, 1},
-		{variableNode, 1},
-		{arrayNode, 10},
-		{mapNode, 10},
-		{identifierNode, 1000},
-		{memberNode, 1500},
-		{unaryNode, 100},
-		{binaryNode, 2000},
-		{callNode, 2000},
-		{pipeNode, 1000},
-		{builtinNode, 500},
-		{predicateNode, 1000},
-		{pointerNode, 500},
-		{sliceNode, 100},
-		{conditionalNode, 100},
-	})(depth - 1)
+	return oneOf(
+		list[fn]{
+			{sequenceNode, 1},
+			{variableNode, 1},
+			{arrayNode, 10},
+			{mapNode, 10},
+			{identifierNode, 1000},
+			{memberNode, 1500},
+			{unaryNode, 100},
+			{binaryNode, 2000},
+			{callNode, 2000},
+			{pipeNode, 1000},
+			{builtinNode, 500},
+			{predicateNode, 1000},
+			{pointerNode, 500},
+			{sliceNode, 100},
+			{conditionalNode, 100},
+		},
+	)(depth - 1)
 }
 
 func nilNode(_ int) string {
@@ -181,10 +189,12 @@ func floatNode(_ int) string {
 }
 
 func integerNode(_ int) string {
-	return oneOf(list[string]{
-		{"1", 1},
-		{"0", 1},
-	})
+	return oneOf(
+		list[string]{
+			{"1", 1},
+			{"0", 1},
+		},
+	)
 }
 
 func stringNode(_ int) string {
@@ -207,10 +217,12 @@ func memberNode(depth int) string {
 	if maybe() {
 		dot = "?."
 	}
-	prop := oneOf(list[fn]{
-		{func(_ int) string { return random(dict) }, 5},
-		{node, 1},
-	})(depth - 1)
+	prop := oneOf(
+		list[fn]{
+			{func(_ int) string { return random(dict) }, 5},
+			{node, 1},
+		},
+	)(depth - 1)
 	if maybe() {
 		return fmt.Sprintf("%v%v%v", node(depth-1), dot, prop)
 	}
@@ -243,44 +255,52 @@ func funcNode(_ int) string {
 
 func callNode(depth int) string {
 	var args []string
-	for i := 0; i < oneOf(list[int]{
-		{0, 100},
-		{1, 100},
-		{2, 50},
-		{3, 25},
-		{4, 10},
-		{5, 5},
-	}); i++ {
+	for i := 0; i < oneOf(
+		list[int]{
+			{0, 100},
+			{1, 100},
+			{2, 50},
+			{3, 25},
+			{4, 10},
+			{5, 5},
+		},
+	); i++ {
 		args = append(args, node(depth-1))
 	}
 
-	fn := oneOf(list[fn]{
-		{methodNode, 2},
-		{funcNode, 2},
-	})(depth - 1)
+	fn := oneOf(
+		list[fn]{
+			{methodNode, 2},
+			{funcNode, 2},
+		},
+	)(depth - 1)
 
 	return fmt.Sprintf("%v(%v)", fn, strings.Join(args, ", "))
 }
 
 func pipeNode(depth int) string {
 	a := node(depth - 1)
-	b := oneOf(list[fn]{
-		{callNode, 2},
-		{builtinNode, 5},
-		{predicateNode, 10},
-	})(depth - 1)
+	b := oneOf(
+		list[fn]{
+			{callNode, 2},
+			{builtinNode, 5},
+			{predicateNode, 10},
+		},
+	)(depth - 1)
 
 	return fmt.Sprintf("%v | %v", a, b)
 }
 
 func builtinNode(depth int) string {
 	var args []string
-	for i := 0; i < oneOf(list[int]{
-		{1, 100},
-		{2, 50},
-		{3, 50},
-		{4, 10},
-	}); i++ {
+	for i := 0; i < oneOf(
+		list[int]{
+			{1, 100},
+			{2, 50},
+			{3, 50},
+			{4, 10},
+		},
+	); i++ {
 		args = append(args, node(depth-1))
 	}
 	return fmt.Sprintf("%v(%v)", random(builtins), strings.Join(args, ", "))
@@ -288,33 +308,39 @@ func builtinNode(depth int) string {
 
 func predicateNode(depth int) string {
 	var args []string
-	for i := 0; i < oneOf(list[int]{
-		{1, 100},
-		{2, 50},
-		{3, 50},
-	}); i++ {
+	for i := 0; i < oneOf(
+		list[int]{
+			{1, 100},
+			{2, 50},
+			{3, 50},
+		},
+	); i++ {
 		args = append(args, node(depth-1))
 	}
 	return fmt.Sprintf("%v(%v)", random(predicates), strings.Join(args, ", "))
 }
 
 func pointerNode(_ int) string {
-	return oneOf(list[string]{
-		{"#", 100},
-		{"#." + random(dict), 100},
-		{"." + random(dict), 100},
-		{"#acc", 10},
-		{"#index", 10},
-	})
+	return oneOf(
+		list[string]{
+			{"#", 100},
+			{"#." + random(dict), 100},
+			{"." + random(dict), 100},
+			{"#acc", 10},
+			{"#index", 10},
+		},
+	)
 }
 
 func arrayNode(depth int) string {
 	var items []string
-	for i := 0; i < oneOf(list[int]{
-		{1, 100},
-		{2, 50},
-		{3, 25},
-	}); i++ {
+	for i := 0; i < oneOf(
+		list[int]{
+			{1, 100},
+			{2, 50},
+			{3, 25},
+		},
+	); i++ {
 		items = append(items, node(depth-1))
 	}
 	return fmt.Sprintf("[%v]", strings.Join(items, ", "))
@@ -322,39 +348,47 @@ func arrayNode(depth int) string {
 
 func mapNode(depth int) string {
 	var items []string
-	for i := 0; i < oneOf(list[int]{
-		{1, 100},
-		{2, 50},
-		{3, 25},
-	}); i++ {
+	for i := 0; i < oneOf(
+		list[int]{
+			{1, 100},
+			{2, 50},
+			{3, 25},
+		},
+	); i++ {
 		items = append(items, fmt.Sprintf("%v: %v", stringNode(depth-1), node(depth-1)))
 	}
 	return fmt.Sprintf("{%v}", strings.Join(items, ", "))
 }
 
 func sliceNode(depth int) string {
-	return oneOf(list[string]{
-		{fmt.Sprintf("%v[%v:%v]", node(depth-1), node(depth-1), node(depth-1)), 100},
-		{fmt.Sprintf("%v[%v:]", node(depth-1), node(depth-1)), 100},
-		{fmt.Sprintf("%v[:%v]", node(depth-1), node(depth-1)), 100},
-		{fmt.Sprintf("%v[:]", node(depth-1)), 1},
-	})
+	return oneOf(
+		list[string]{
+			{fmt.Sprintf("%v[%v:%v]", node(depth-1), node(depth-1), node(depth-1)), 100},
+			{fmt.Sprintf("%v[%v:]", node(depth-1), node(depth-1)), 100},
+			{fmt.Sprintf("%v[:%v]", node(depth-1), node(depth-1)), 100},
+			{fmt.Sprintf("%v[:]", node(depth-1)), 1},
+		},
+	)
 }
 
 func conditionalNode(depth int) string {
-	return oneOf(list[string]{
-		{fmt.Sprintf("if %v { %v } else { %v }", node(depth-1), node(depth-1), node(depth-1)), 100},
-		{fmt.Sprintf("%v ? %v : %v", node(depth-1), node(depth-1), node(depth-1)), 100},
-		{fmt.Sprintf("%v ?: %v", node(depth-1), node(depth-1)), 20},
-	})
+	return oneOf(
+		list[string]{
+			{fmt.Sprintf("if %v { %v } else { %v }", node(depth-1), node(depth-1), node(depth-1)), 100},
+			{fmt.Sprintf("%v ? %v : %v", node(depth-1), node(depth-1), node(depth-1)), 100},
+			{fmt.Sprintf("%v ?: %v", node(depth-1), node(depth-1)), 20},
+		},
+	)
 }
 
 func sequenceNode(depth int) string {
 	var items []string
-	for i := 0; i < oneOf(list[int]{
-		{2, 50},
-		{3, 25},
-	}); i++ {
+	for i := 0; i < oneOf(
+		list[int]{
+			{2, 50},
+			{3, 25},
+		},
+	); i++ {
 		items = append(items, node(depth-1))
 	}
 	if maybe() {
